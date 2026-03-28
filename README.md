@@ -17,9 +17,9 @@ This project is collaboratively developed by a team of 4 members, with each memb
 | Name | Assigned Module | Module Description |
 | :--- | :--- | :--- |
 | **Chew Sai Hou**|  **Achievement Tracker** | Manages records of awards, certificates, and recognition. |
-| [Chia Tze Wei] | **Event Tracker** | Manages participation in university events, workshops, or talks. |
-| [Chuah Jia Jian] |**Club Tracker** | Manages club/society affiliations and leadership roles. |
-| [Beh Jin Yong] | **Merit Tracker** | Records contribution hours through volunteering or services. |
+| Chia Tze Wei | **Event Tracker** | Manages participation in university events, workshops, or talks. |
+| Chuah Jia Jian |**Club Tracker** | Manages club/society affiliations and leadership roles. |
+| Beh Jin Yong | **Merit Tracker** | Records contribution hours through volunteering or services. |
 
 *Note: The Centralized User Authentication (Login/Register) and the core Database Architecture (ERD) were developed collaboratively as a group effort.*
 
