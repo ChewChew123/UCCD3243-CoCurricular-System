@@ -15,11 +15,11 @@ It allows students to seamlessly track their event participation, club membershi
 This project is collaboratively developed by a team of 4 members, with each member taking full responsibility for the full-stack development (CRUD operations) of their respective modules:
 
 | Name | Student ID | Assigned Module | Module Description |
-| :--- | :--- | :--- | :--- |
-| **Chew Sai Hou** | 2305653 | **Achievement Tracker** | Manages records of awards, certificates, and recognition. |
-| [Member 2 Name] | [ID] | **Event Tracker** | Manages participation in university events, workshops, or talks. |
-| [Member 3 Name] | [ID] | **Club Tracker** | Manages club/society affiliations and leadership roles. |
-| [Member 4 Name] | [ID] | **Merit Tracker** | Records contribution hours through volunteering or services. |
+| :--- | :--- | :--- |
+| **Chew Sai Hou**  **Achievement Tracker** | Manages records of awards, certificates, and recognition. |
+| [Chia Tze Wei] | [ID] | **Event Tracker** | Manages participation in university events, workshops, or talks. |
+| [Chuah Jia Jian] | [ID] | **Club Tracker** | Manages club/society affiliations and leadership roles. |
+| [Beh Jin Yong] | [ID] | **Merit Tracker** | Records contribution hours through volunteering or services. |
 
 *Note: The Centralized User Authentication (Login/Register) and the core Database Architecture (ERD) were developed collaboratively as a group effort.*
 
