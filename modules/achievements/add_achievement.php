@@ -1,5 +1,5 @@
 <?php
-// 文件路径: modules/achievements/add_achievement.php
+// path : modules/achievements/add_achievement.php
 session_start();
 require('../../includes/db_connect.php'); 
 date_default_timezone_set('Asia/Kuala_Lumpur');
@@ -11,32 +11,8 @@ if (!isset($_SESSION['user_id'])) {
 
 $status = "";
 $error = "";
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $user_id = $_SESSION['user_id'];
-    $title = $_POST['achievement_title'];
-    $category = $_POST['achievement_category'];
-    $level = $_POST['level'];
-    $issuer = $_POST['issuer'];
-    $date_received = $_POST['date_received'];
-    $description = $_POST['achievement_description'];
-    
-    $event_id = !empty($_POST['event_id']) ? $_POST['event_id'] : NULL; 
-
-    $sql = "INSERT INTO achievements (user_id, event_id, achievement_title, achievement_description, achievement_category, level, issuer, date_received) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("iissssss", $user_id, $event_id, $title, $description, $category, $level, $issuer, $date_received);
-
-    if ($stmt->execute()) {
-        header("Location: index.php?msg=added"); // 成功后直接跳回主页看结果
-        exit();
-    } else {
-        $error = "Failed to add achievement. Please try again.";
-    }
-}
 ?>
+<!DOCTYPE html>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -48,9 +24,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
    <style>
-        /* 统一的高级背景色 */
         body { 
-            background-color: #5a7ccc; /* 夜空蓝背景 */
+            background-color: #5a7ccc;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #e2e8f0;
         }
@@ -60,7 +35,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-bottom: 50px;
         }
 
-        /* 表单卡片的高级暗色质感 */
         .form-card {
             background: linear-gradient(90deg, #fda085, #f6d365);
             border: 1px solid #334155;
@@ -75,11 +49,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             width: 100%;
         }
 
-        /* 统一输入框和下拉菜单的颜色 */
         .form-control, .form-select {
-            background-color: #0f172a !important; /* 强制深色 */
+            background-color: #0f172a !important; 
             border: 1px solid #334155;
-            color: #f8fafc !important; /* 强制白字 */
+            color: #f8fafc !important; 
             padding: 12px 15px;
             border-radius: 10px;
             transition: all 0.2s ease;
@@ -96,13 +69,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             box-shadow: 0 0 0 3px rgba(253, 160, 133, 0.15);
         }
 
-        /* 修复下拉选项的颜色 */
         .form-select option {
             background-color: #1e293b;
             color: #f8fafc;
         }
 
-        /* 解决浏览器自动填充导致输入框变白/变黄的问题 */
         input:-webkit-autofill,
         input:-webkit-autofill:hover, 
         input:-webkit-autofill:focus, 
@@ -140,7 +111,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             box-shadow: 0 10px 20px rgba(253, 160, 133, 0.2);
         }
 
-        /* 强制让日期输入框自带的日历小图标变成白色 */
         input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(1);
             cursor: pointer;
@@ -179,7 +149,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
             <?php endif; ?>
 
-            <form method="post" action="">
+            <form action="process_add.php" method="POST" enctype="multipart/form-data">
                 
                 <div class="mb-4">
                     <label class="form-label fw-bold"><i class="bi bi-fonts icon-prepend"></i>Achievement Title</label>
@@ -219,6 +189,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="mb-4">
                     <label class="form-label fw-bold"><i class="bi bi-calendar-event icon-prepend"></i>Date Received</label>
                     <input type="date" name="date_received" class="form-control" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-white">Upload Certificate (Optional)</label>
+                    <input type="file" name="certificate_image" class="form-control" accept="image/*">
+                    <small class="text-muted">Accepts JPG, PNG (Max 2MB)</small>
                 </div>
 
                 <div class="mb-4">
