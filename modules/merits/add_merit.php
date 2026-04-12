@@ -2,7 +2,7 @@
 session_start();
 require('../../database/db_connect.php');
 
-// Flowchart Step: User Logged In?
+// Check if user has logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../login.php");
     exit();

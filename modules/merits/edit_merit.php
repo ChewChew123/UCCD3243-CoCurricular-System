@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Flowchart Step: Fetch Record with ID
+// Fetch record with ID
 if (isset($_GET['id'])) {
     $merit_id = $_GET['id'];
     $query = "SELECT * FROM merits WHERE merit_id = ? AND user_id = ?";

@@ -9,14 +9,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $date = $_POST['date_completed'];
     $desc = trim($_POST['merit_description']);
 
-    // --- Flowchart Step: All fields filled with valid format/value? ---
+    // Validation for data value and format
     if (empty($organizer) || empty($hours) || empty($date)) {
         header("Location: add_merit.php?error=empty");
         exit();
     }
 
-    // --- Flowchart Step: Merit data already exists? ---
-    // Checking if the same user has logged the same organizer, date, and hours
+    // Repeating data checking
     $check_sql = "SELECT * FROM merits WHERE user_id = ? AND organizer = ? AND date_completed = ? AND hours = ?";
     $stmt = $conn->prepare($check_sql);
     $stmt->bind_param("isds", $user_id, $organizer, $date, $hours);
@@ -24,17 +23,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
-        // YES (Duplicate) -> Flowchart: Display Warning Message
+        // Error if data is invalid
         header("Location: add_merit.php?error=duplicate");
         exit();
     } else {
-        // NO (New Record) -> Flowchart: Execute SQL INSERT
+        // Insert new data if valid
         $insert_sql = "INSERT INTO merits (user_id, organizer, hours, date_completed, merit_description) VALUES (?, ?, ?, ?, ?)";
         $i_stmt = $conn->prepare($insert_sql);
         $i_stmt->bind_param("isdss", $user_id, $organizer, $hours, $date, $desc);
 
         if ($i_stmt->execute()) {
-            // Flowchart: Display Success Message & Refresh List
             header("Location: index.php?status=success");
             exit();
         } else {

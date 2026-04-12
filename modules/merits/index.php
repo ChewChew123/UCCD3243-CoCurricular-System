@@ -1,9 +1,8 @@
 <?php // Assigned to Beh Jin Yong
 session_start();
-// Using the path based on your folder structure
 require('../../database/db_connect.php');
 
-// Flowchart Step: User Logged In?
+// Check if user has logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../login.php");
     exit();
@@ -11,14 +10,14 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Flowchart Step: Fetch Merit from Database
+// Fetch Merit from Database
 $query = "SELECT * FROM merits WHERE user_id = ? ORDER BY date_completed DESC";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Calculate total hours for a better dashboard experience
+// Calculate total hours
 $total_query = "SELECT SUM(hours) as total FROM merits WHERE user_id = ?";
 $t_stmt = $conn->prepare($total_query);
 $t_stmt->bind_param("i", $user_id);
@@ -34,7 +33,6 @@ $total_hours = $total_result['total'] ?? 0;
     <title>Merit Tracker - Dashboard</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <style>
-    /* Professional look for the Dashboard */
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; }
     .container { max-width: 1000px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     
