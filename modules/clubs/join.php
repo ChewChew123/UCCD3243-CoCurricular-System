@@ -187,6 +187,10 @@ New Activity
 <span class="material-symbols-outlined">verified</span>
 <span class="text-sm font-semibold Manrope uppercase tracking-wider">Achievements</span>
 </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-200 dark:hover:bg-slate-800/50" href="../merits/index.php">
+<span class="material-symbols-outlined">military_tech</span>
+<span class="text-sm font-semibold Manrope uppercase tracking-wider">Merits</span>
+</a>
 <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-200 dark:hover:bg-slate-800/50" href="index.php">
 <span class="material-symbols-outlined">groups</span>
 <span class="text-sm font-semibold Manrope uppercase tracking-wider">Club Memberships</span>
