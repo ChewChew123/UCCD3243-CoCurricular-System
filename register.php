@@ -11,8 +11,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $full_name = $_POST['full_name'];
     $email = $_POST['email'];
     $programme = $_POST['programme'];
-    $security_answer = password_hash($_POST['security_answer'], PASSWORD_DEFAULT); 
-
+   // get ans -> trim -> tolower -> encrypt
+    $raw_answer = strtolower(trim($_POST['security_answer']));
+    $security_answer = password_hash($raw_answer, PASSWORD_DEFAULT);
     
     $check_sql = "SELECT user_id FROM users WHERE username = ? OR email = ?";
     $check_stmt = $conn->prepare($check_sql);
@@ -31,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header("Location: login.php?register=success");
             exit();
         } else {
-            $error = "Registration failed: " . $conn->error;
+            $error = "Registration failed. Please try again or contact the administrator.";
         }
     }
 }
@@ -185,11 +186,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <div class="group">
 <label class="block font-headline text-xs font-bold uppercase tracking-wider text-outline mb-1" for="programme">Programme</label>
 <select class="input-minimal w-full py-3 px-4 rounded-t-lg font-medium text-on-surface focus:ring-0 appearance-none" id="programme" name="programme">
-<option disabled="" selected="" value="">Select Major</option>
-<option value="cs">Computer Science</option>
-<option value="eng">Engineering</option>
-<option value="bus">Business Administration</option>
-<option value="art">Fine Arts</option>
+    <option value="Bachelor of Computer Science">Bachelor of Computer Science</option>
+    <option value="Bachelor of Information Systems">Bachelor of Information Systems</option>
+    <option value="Bachelor of Information Technology">Bachelor of Information Technology</option>
+    <option value="Bachelor of Software Engineering">Bachelor of Software Engineering</option>
+    <option value="Bachelor of Engineering">Bachelor of Engineering</option>
+    <option value="Bachelor of Business Administration">Bachelor of Business Administration</option>
+    <option value="Other">Other Programme</option>
 </select>
 <div class="hidden text-error text-xs mt-1 font-medium" id="error_programme">Select your current programme.</div>
 </div>
