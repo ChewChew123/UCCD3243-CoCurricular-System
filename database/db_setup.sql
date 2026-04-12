@@ -123,6 +123,8 @@ CREATE TABLE `users` (
   `full_name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `programme` varchar(100) DEFAULT NULL,
+  `academic_year` varchar(20) DEFAULT 'Year 1',
+  `faculty` varchar(100) DEFAULT 'General Faculty',
   `security_answer` varchar(255) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
