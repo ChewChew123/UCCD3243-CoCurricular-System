@@ -159,7 +159,7 @@ body {
 <div class="mt-2 text-end">
     <small>
         No club registered? 
-        <a href="../clubs/index.php" class="text-decoration-none fw-bold">
+        <a href="../clubs/add_club.php" class="text-decoration-none fw-bold">
             Register here
         </a>
     </small>
