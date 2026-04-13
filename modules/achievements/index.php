@@ -275,6 +275,7 @@ while ($row = $res_lvl->fetch_assoc()) {
     </style>
 </head>
 <body>
+    
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3 fixed-top shadow">
     <a class="navbar-brand fw-bold" href="../../index.php"><i class="bi bi-grid-fill me-2"></i>Dashboard</a>

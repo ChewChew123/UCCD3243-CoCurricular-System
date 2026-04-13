@@ -20,7 +20,7 @@ $full_name = $user_data['full_name'];
 $programme = $user_data['programme'] ?? 'Curator';
 
 // Fetch Memberships
-$sql = "SELECT cm.member_id, c.club_name, c.club_category, cm.member_role, cm.member_status 
+$sql = "SELECT cm.member_id, c.club_id, c.club_name, c.club_category, cm.member_role, cm.member_status 
         FROM club_members cm 
         JOIN clubs c ON cm.club_id = c.club_id 
         WHERE cm.user_id = ?";
@@ -274,14 +274,22 @@ New Activity
 
 <!-- Header Section -->
 <div class="flex justify-between items-end mb-12">
-<div>
-<span class="block text-sm font-semibold Manrope uppercase tracking-[0.15em] text-primary mb-2">Curated Connections</span>
-<h1 class="text-5xl font-black font-headline text-on-surface tracking-tight">Club Memberships</h1>
-</div>
-<a href="join.php" class="signature-gradient text-white px-8 py-4 rounded-full font-bold flex items-center gap-3 shadow-xl hover:scale-[1.02] transition-transform active:scale-95 duration-150">
-<span class="material-symbols-outlined">add_circle</span>
-                Join New Club
-            </a>
+    <div>
+        <span class="block text-sm font-semibold Manrope uppercase tracking-[0.15em] text-primary mb-2">Curated Connections</span>
+        <h1 class="text-5xl font-black font-headline text-on-surface tracking-tight">Club Memberships</h1>
+    </div>
+    
+    <div class="flex flex-col items-end gap-3">
+        <a href="add_club.php" class="text-sm font-bold text-slate-400 hover:text-primary flex items-center gap-1 transition-colors">
+            <span class="material-symbols-outlined text-sm">edit_square</span>
+            Can't find your club? Create it here.
+        </a>
+
+        <a href="join.php" class="signature-gradient text-white px-8 py-4 rounded-full font-bold flex items-center gap-3 shadow-xl hover:scale-[1.02] transition-transform active:scale-95 duration-150">
+            <span class="material-symbols-outlined">add_circle</span>
+            Join New Club
+        </a>
+    </div>
 </div>
 <!-- Bento Highlights (Asymmetric Layout) -->
 <div class="grid grid-cols-12 gap-6 mb-12">
@@ -362,12 +370,21 @@ New Activity
     ?>
     <tr class="hover:bg-surface-container-low transition-colors group">
     <td class="px-8 py-6">
-    <div class="flex items-center gap-4">
-    <div class="w-10 h-10 rounded-lg <?php echo $icon_bg; ?> flex items-center justify-center <?php echo $icon_text; ?>">
-    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;"><?php echo $icon; ?></span>
-    </div>
-    <span class="font-bold text-on-surface font-headline"><?php echo htmlspecialchars($club['club_name']); ?></span>
-    </div>
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 min-w-10 rounded-lg <?php echo $icon_bg; ?> flex items-center justify-center <?php echo $icon_text; ?>">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;"><?php echo $icon; ?></span>
+            </div>
+            
+            <div class="flex flex-col">
+                <span class="font-bold text-on-surface font-headline"><?php echo htmlspecialchars($club['club_name']); ?></span>
+                
+                <a href="../events/index.php?filter_club=<?php echo $club['club_id']; ?>" 
+                   class="text-[10px] text-primary hover:text-blue-800 hover:underline flex items-center gap-1 mt-1 font-bold tracking-wider transition-colors">
+                    <span class="material-symbols-outlined" style="font-size: 12px;">event</span>
+                    VIEW EVENTS
+                </a>
+            </div>
+        </div>
     </td>
     <td class="px-8 py-6 text-sm text-slate-600 font-medium"><?php echo htmlspecialchars($club['member_role']); ?></td>
     <td class="px-8 py-6">

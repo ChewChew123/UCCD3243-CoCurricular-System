@@ -7,6 +7,10 @@ if (!isset($_SESSION['user_id'])) {
     header("Location: ../../login.php");
     exit();
 }
+
+// Fetch events for the dropdown linking
+$event_sql = "SELECT event_id, event_name FROM events ORDER BY event_date DESC";
+$events_result = $conn->query($event_sql);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,6 +51,20 @@ if (!isset($_SESSION['user_id'])) {
         <?php endif; ?>
 
         <form action="process_add_merit.php" method="POST">
+            <div class="form-group">
+                <label>Linked Event (Optional):</label>
+                <select name="event_id" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; margin-bottom: 20px;">
+                    <option value="">-- Independent Activity (Not linked to an event) --</option>
+                    <?php if($events_result && $events_result->num_rows > 0): ?>
+                        <?php while($ev = $events_result->fetch_assoc()): ?>
+                            <option value="<?php echo $ev['event_id']; ?>">
+                                <?php echo htmlspecialchars($ev['event_name']); ?>
+                            </option>
+                        <?php endwhile; ?>
+                    <?php endif; ?>
+                </select>
+            </div>
+
             <div class="form-group">
                 <label>Organizer:</label>
                 <input type="text" name="organizer" required placeholder="e.g. Student Council">

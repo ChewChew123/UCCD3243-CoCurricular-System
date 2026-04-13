@@ -5,6 +5,7 @@ require('../../database/db_connect.php');
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_id = $_SESSION['user_id'];
     $merit_id = $_POST['merit_id'];
+    $event_id = !empty($_POST['event_id']) ? intval($_POST['event_id']) : NULL;
     $organizer = trim($_POST['organizer']);
     $hours = $_POST['hours'];
     $date = $_POST['date_completed'];
@@ -27,14 +28,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update record from database
-    $update_sql = "UPDATE merits SET organizer = ?, hours = ?, date_completed = ?, merit_description = ? WHERE merit_id = ? AND user_id = ?";
+    $update_sql = "UPDATE merits SET event_id = ?, organizer = ?, hours = ?, date_completed = ?, merit_description = ? WHERE merit_id = ? AND user_id = ?";
     $u_stmt = $conn->prepare($update_sql);
-    $u_stmt->bind_param("sdssii", $organizer, $hours, $date, $desc, $merit_id, $user_id);
+    
+    // isdssii = integer(event_id), string(organizer), double(hours), string(date), string(desc), integer(merit_id), integer(user_id)
+    $u_stmt->bind_param("isdssii", $event_id, $organizer, $hours, $date, $desc, $merit_id, $user_id);
 
     if ($u_stmt->execute()) {
-        header("Location: index.php?status=success");
+        header("Location: index.php?status=success&action=edited");
         exit();
     } else {
-        echo "Error: " . $conn->error;
+        echo "Error updating record: " . $conn->error;
     }
 }

@@ -4,6 +4,10 @@ require('../../database/db_connect.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_id = $_SESSION['user_id'];
+    
+    // 接收 event_id (如果是 Independent Activity 就是 NULL)
+    $event_id = !empty($_POST['event_id']) ? intval($_POST['event_id']) : NULL; 
+    
     $organizer = trim($_POST['organizer']);
     $hours = $_POST['hours'];
     $date = $_POST['date_completed'];
@@ -27,19 +31,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: add_merit.php?error=duplicate");
         exit();
     } else {
-        // Insert new data if valid
-        $insert_sql = "INSERT INTO merits (user_id, organizer, hours, date_completed, merit_description) VALUES (?, ?, ?, ?, ?)";
+        // Insert new data if valid (包含了 event_id)
+        $insert_sql = "INSERT INTO merits (user_id, event_id, organizer, hours, date_completed, merit_description) VALUES (?, ?, ?, ?, ?, ?)";
         $i_stmt = $conn->prepare($insert_sql);
-        $i_stmt->bind_param("isdss", $user_id, $organizer, $hours, $date, $desc);
+        
+        // iisdss = integer, integer, string, double, string, string
+        $i_stmt->bind_param("iisdss", $user_id, $event_id, $organizer, $hours, $date, $desc);
 
         if ($i_stmt->execute()) {
             header("Location: index.php?status=success");
             exit();
         } else {
-            echo "Database error: " . $conn->error;
+            echo "Error adding merit: " . $conn->error;
         }
-    }
-} else {
-    header("Location: add_merit.php");
-    exit();
-}
+    } 
+} 
+?>
