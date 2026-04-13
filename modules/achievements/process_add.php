@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $user_id = $_SESSION['user_id'];
+    $user_id = $_POST['target_user_id'];
     $title = $_POST['achievement_title'];
     $category = $_POST['achievement_category'];
     $level = $_POST['level'];

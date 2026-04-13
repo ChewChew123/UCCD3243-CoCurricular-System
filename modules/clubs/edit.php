@@ -29,9 +29,9 @@ $full_name = $user_data['full_name'];
 $programme = $user_data['programme'] ?? 'Curator';
 
 // Fetch Membership Data (Security: Check ownership)
-$sql = "SELECT cm.*, c.club_name FROM club_members cm JOIN clubs c ON cm.club_id = c.club_id WHERE cm.member_id = ? AND cm.user_id = ?";
+$sql = "SELECT cm.*, c.club_name FROM club_members cm JOIN clubs c ON cm.club_id = c.club_id WHERE cm.member_id = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("ii", $member_id, $user_id);
+$stmt->bind_param("i", $member_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -51,9 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($new_role) || empty($new_status)) {
         $error = "All fields are required.";
     } else {
-        $update_sql = "UPDATE club_members SET member_role = ?, member_status = ? WHERE member_id = ? AND user_id = ?";
+        // Only Admin can update the record regardless of user ownership
+        $update_sql = "UPDATE club_members SET member_role = ?, member_status = ? WHERE member_id = ?";
         $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("ssii", $new_role, $new_status, $member_id, $user_id);
+        $update_stmt->bind_param("ssi", $new_role, $new_status, $member_id);
 
         if ($update_stmt->execute()) {
             header("Location: index.php?edit=success");

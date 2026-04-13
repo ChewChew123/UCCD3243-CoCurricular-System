@@ -1,16 +1,22 @@
 <?php
+/**
+ * File: index.php (Merits Module)
+ * Path: /modules/merits/index.php
+ * Purpose: Track and visualize volunteering hours and community engagement records.
+ */
 session_start();
-require_once '../../includes/db_connect.php'; // 确保路径正确
+require_once '../../includes/db_connect.php';
 
-// Session Check
+// 1. AUTHENTICATION CHECK
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../login.php");
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
+$is_admin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
 
-// Fetch User Profile for Sidebar
+// 2. FETCH USER PROFILE FOR SIDEBAR
 $user_sql = "SELECT full_name, programme FROM users WHERE user_id = ?";
 $user_stmt = $conn->prepare($user_sql);
 $user_stmt->bind_param("i", $user_id);
@@ -19,14 +25,23 @@ $user_data = $user_stmt->get_result()->fetch_assoc();
 $full_name = $user_data['full_name'];
 $programme = $user_data['programme'] ?? 'Curator';
 
-// Fetch Merits (🌟 满分细节：通过 LEFT JOIN 把关联的 Event 名字也抓出来)
-$query = "SELECT m.*, e.event_name 
-          FROM merits m 
-          LEFT JOIN events e ON m.event_id = e.event_id 
-          WHERE m.user_id = ? 
-          ORDER BY m.date_completed DESC";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $user_id);
+// 3. FETCH MERIT RECORDS (Admin: System-wide | Student: Personal)
+if ($is_admin) {
+    $query = "SELECT m.*, e.event_name, u.full_name as student_name 
+              FROM merits m 
+              LEFT JOIN events e ON m.event_id = e.event_id 
+              JOIN users u ON m.user_id = u.user_id
+              ORDER BY m.date_completed DESC";
+    $stmt = $conn->prepare($query);
+} else {
+    $query = "SELECT m.*, e.event_name 
+              FROM merits m 
+              LEFT JOIN events e ON m.event_id = e.event_id 
+              WHERE m.user_id = ? 
+              ORDER BY m.date_completed DESC";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $user_id);
+}
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -36,47 +51,72 @@ while ($row = $result->fetch_assoc()) {
 }
 $total_records = count($all_merits);
 
-$total_query = "SELECT SUM(hours) as total FROM merits WHERE user_id = ?";
-$t_stmt = $conn->prepare($total_query);
-$t_stmt->bind_param("i", $user_id);
+// 4. CALCULATE TOTAL HOURS SUMMARY
+if ($is_admin) {
+    $total_query = "SELECT SUM(hours) as total FROM merits";
+    $t_stmt = $conn->prepare($total_query);
+} else {
+    $total_query = "SELECT SUM(hours) as total FROM merits WHERE user_id = ?";
+    $t_stmt = $conn->prepare($total_query);
+    $t_stmt->bind_param("i", $user_id);
+}
 $t_stmt->execute();
 $total_result = $t_stmt->get_result()->fetch_assoc();
 $total_hours = $total_result['total'] ?? 0;
+
+// 5. CHART DATA PREPARATION
+// Trend: Monthly Engagement (Last 6 Months)
+if ($is_admin) {
+    $sql_trend = "SELECT DATE_FORMAT(date_completed, '%b %Y') as month_label, SUM(hours) as month_total 
+                  FROM merits GROUP BY month_label ORDER BY date_completed ASC";
+    $stmt_trend = $conn->prepare($sql_trend);
+} else {
+    $sql_trend = "SELECT DATE_FORMAT(date_completed, '%b %Y') as month_label, SUM(hours) as month_total 
+                  FROM merits WHERE user_id = ? GROUP BY month_label ORDER BY date_completed ASC";
+    $stmt_trend = $conn->prepare($sql_trend);
+    $stmt_trend->bind_param("i", $user_id);
+}
+$stmt_trend->execute();
+$res_trend = $stmt_trend->get_result();
+$trend_labels = []; $trend_data = [];
+while($r = $res_trend->fetch_assoc()){
+    $trend_labels[] = $r['month_label'];
+    $trend_data[] = $r['month_total'];
+}
+
+// Distribution: Activity Source (By Organizer) - LIMIT removed to show all data
+if ($is_admin) {
+    $sql_org = "SELECT organizer, COUNT(*) as count FROM merits GROUP BY organizer";
+    $stmt_org = $conn->prepare($sql_org);
+} else {
+    $sql_org = "SELECT organizer, COUNT(*) as count FROM merits WHERE user_id = ? GROUP BY organizer";
+    $stmt_org = $conn->prepare($sql_org);
+    $stmt_org->bind_param("i", $user_id);
+}
+$stmt_org->execute();
+$res_org = $stmt_org->get_result();
+$org_labels = []; $org_data = [];
+while($r = $res_org->fetch_assoc()){
+    $org_labels[] = $r['organizer'];
+    $org_data[] = $r['count'];
+}
 ?>
 <!DOCTYPE html>
 <html class="light" lang="en">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>Merit Tracker | The Academic Curator</title>
+    <title>Merit Tracker | Academic Curator</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script id="tailwind-config">
+    <script>
         tailwind.config = {
-            darkMode: "class",
             theme: {
                 extend: {
-                    "colors": {
-                        "primary": "#003f87",
-                        "primary-fixed": "#d7e2ff",
-                        "on-primary-fixed": "#001a40",
-                        "surface": "#f6faff",
-                        "surface-container-lowest": "#ffffff",
-                        "surface-container-low": "#ecf5fe",
-                        "on-surface": "#141d23",
-                        "error": "#ba1a1a",
-                        "error-container": "#ffdad6",
-                        "emerald-500": "#10b981",
-                        "emerald-100": "#d1fae5",
-                        "emerald-700": "#047857",
-                        "amber-500": "#f59e0b"
-                    },
-                    "fontFamily": {
-                        "headline": ["Manrope"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
-                    }
+                    colors: { "primary": "#003f87", "surface": "#f6faff", "on-surface": "#141d23" },
+                    fontFamily: { "headline": ["Manrope"], "body": ["Inter"] }
                 }
             }
         }
@@ -85,208 +125,204 @@ $total_hours = $total_result['total'] ?? 0;
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
         .signature-gradient { background: linear-gradient(135deg, #003f87 0%, #0056b3 100%); }
         .achievement-bloom { position: relative; overflow: hidden; }
-        .achievement-bloom::after {
-            content: ''; position: absolute; top: -20%; right: -10%; width: 200px; height: 200px;
-            background: #003f87; opacity: 0.05; border-radius: 50%; pointer-events: none;
-        }
+        .achievement-bloom::after { content: ''; position: absolute; top: -20%; right: -10%; width: 200px; height: 200px; background: #003f87; opacity: 0.05; border-radius: 50%; pointer-events: none; }
     </style>
 </head>
 <body class="bg-surface text-on-surface font-body min-h-screen">
 
-<aside class="h-screen w-72 fixed left-0 top-0 bg-white dark:bg-slate-900 flex flex-col p-6 space-y-8 z-50 border-r border-slate-100 dark:border-slate-800">
+<aside class="h-screen w-72 fixed left-0 top-0 bg-white flex flex-col p-6 space-y-8 z-50 border-r border-slate-100 shadow-sm">
     <div class="flex items-center gap-3">
         <div class="w-10 h-10 signature-gradient rounded-xl flex items-center justify-center text-white">
             <span class="material-symbols-outlined">auto_stories</span>
         </div>
-        <div class="text-2xl font-bold tracking-tight text-blue-900 dark:text-blue-100 font-headline">Academic Curator</div>
+        <div class="text-2xl font-bold tracking-tight text-blue-900 font-headline">Academic Curator</div>
     </div>
 
-    <div class="flex items-center gap-3 px-2 py-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-        <img class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjZ_oSRVSiGbl-3d0SW9fUmXz9Cu1MsAMPA7uZdp3KuIWCiPdAWXp15aOKt9aLa2FkwcUxtBO05z6u-ogifVlXzX56G2KA7UbUdMBSB1uMhIpCG03NhCTr70NwqcdWocj5NSzxeUSFF82mW0AxbY5Ft0tNfNS9NbjtTFERRBKfxxuLeeWGrJSXoPjfm_RGYDBXFDuelpRkwJIobR20MbVLBbgchPC_RKTmJU3n44N8Pwn4XffLrKhZ5N5a0ThzG72QhBaSNGmc0Xew" alt="User Avatar">
+    <div class="flex items-center gap-3 px-2 py-4 bg-slate-50 rounded-2xl">
+        <img class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" src="https://ui-avatars.com/api/?name=<?php echo urlencode($full_name); ?>&background=003f87&color=fff" alt="User">
         <div class="overflow-hidden">
-            <p class="text-sm font-bold text-slate-800 dark:text-slate-200 truncate"><?php echo htmlspecialchars($full_name); ?></p>
+            <p class="text-sm font-bold text-slate-800 truncate"><?php echo htmlspecialchars($full_name); ?></p>
             <p class="text-[10px] font-bold text-primary uppercase tracking-wider truncate"><?php echo htmlspecialchars($programme); ?></p>
         </div>
     </div>
 
-    <a href="add_merit.php" class="py-3 px-4 signature-gradient text-white rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2">
-        <span class="material-symbols-outlined text-sm">add</span>
-        Record Merit
-    </a>
-
     <nav class="flex-1 space-y-2">
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-200 dark:hover:bg-slate-800/50" href="../../index.php">
-            <span class="material-symbols-outlined">dashboard</span>
-            <span class="text-sm font-semibold Manrope uppercase tracking-wider">Overview</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:text-blue-600 hover:bg-slate-200" href="../events/index.php">
-            <span class="material-symbols-outlined">event_note</span>
-            <span class="text-sm font-semibold Manrope uppercase tracking-wider">Events</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:text-blue-600 hover:bg-slate-200" href="../achievements/index.php">
-            <span class="material-symbols-outlined">verified</span>
-            <span class="text-sm font-semibold Manrope uppercase tracking-wider">Achievements</span>
-        </a>
-        
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-blue-50/50 text-blue-800 font-bold border-r-4 border-blue-800" href="index.php">
-            <span class="material-symbols-outlined">military_tech</span>
-            <span class="text-sm font-semibold Manrope uppercase tracking-wider">Merits</span>
-        </a>
-        
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:text-blue-600 hover:bg-slate-200" href="../clubs/index.php">
-            <span class="material-symbols-outlined">groups</span>
-            <span class="text-sm font-semibold Manrope uppercase tracking-wider">Club Memberships</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:text-blue-600 hover:bg-slate-200" href="../../profile.php">
-            <span class="material-symbols-outlined">person</span>
-            <span class="text-sm font-semibold Manrope uppercase tracking-wider">My Profile</span>
-        </a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:bg-slate-100" href="../../index.php"><span class="material-symbols-outlined">dashboard</span><span class="text-sm font-semibold uppercase tracking-wider">Overview</span></a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:bg-slate-100" href="../events/index.php"><span class="material-symbols-outlined">event_note</span><span class="text-sm font-semibold uppercase tracking-wider">Events</span></a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:bg-slate-100" href="../achievements/index.php"><span class="material-symbols-outlined">verified</span><span class="text-sm font-semibold uppercase tracking-wider">Achievements</span></a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-blue-50 text-blue-800 font-bold border-r-4 border-blue-800" href="index.php"><span class="material-symbols-outlined">military_tech</span><span class="text-sm font-semibold uppercase tracking-wider">Merits</span></a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:bg-slate-100" href="../clubs/index.php"><span class="material-symbols-outlined">groups</span><span class="text-sm font-semibold uppercase tracking-wider">Clubs</span></a>
+        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:bg-slate-100" href="../../profile.php"><span class="material-symbols-outlined">person</span><span class="text-sm font-semibold uppercase tracking-wider">My Profile</span></a>
     </nav>
 
-    <div class="pt-6 border-t border-slate-200/50 space-y-2">
-        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 transition-colors" href="../../logout.php">
-            <span class="material-symbols-outlined">logout</span>
-            <span class="text-xs font-semibold Manrope uppercase tracking-wider">Log Out</span>
+    <div class="pt-6 border-t border-slate-200/50">
+        <a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-red-600 transition-colors" href="../../logout.php">
+            <span class="material-symbols-outlined">logout</span><span class="text-xs font-semibold uppercase tracking-wider">Log Out</span>
         </a>
     </div>
 </aside>
 
-<header class="fixed top-0 right-0 left-72 bg-slate-50 flex justify-between items-center px-8 py-4 z-40 border-b border-slate-100">
-    <div class="flex-1 max-w-xl">
-        <div class="relative">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-            <input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary transition-all text-sm" placeholder="Search your merit records..." type="text"/>
-        </div>
-    </div>
-    <div class="flex items-center gap-6 ml-8">
-        <div class="flex items-center gap-4">
-            <button class="p-2 text-slate-600 hover:bg-slate-200/50 rounded-full transition-colors relative">
-                <span class="material-symbols-outlined">settings</span>
-            </button>
-        </div>
-        <div class="h-8 w-[1px] bg-slate-200"></div>
-        <img alt="Profile" class="w-8 h-8 rounded-full border-2 border-primary-fixed" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZUstEX2uJ8fxMVq-7RaP9RdQIPxE4A1MajOEIAbs3ZmZoJPwIJkUM3oWCbQo5P3jEIF2gRrNHp-Eo6w2APijwpGoQmwh6Oca9ORZPu294JVWkqCgXmupjlPGBwCyDRBJFl0I5R_1Ie5T3nEjuYx2KCUHn4kngTCWd6ZFquBHm_4e3cgAouUP-L2xgjWHhq72KHIwlrzAcd2HKUue6pV39BuyKrSHnFcgxpP7ELOPbRbMn_oMjvZddlddDm1Itg7xUCerH7BVtp02"/>
+<header class="fixed top-0 right-0 left-72 bg-white/80 backdrop-blur-md flex justify-between items-center px-8 py-4 z-40 border-b border-slate-100">
+    <div class="flex-1 max-w-xl text-sm font-bold text-primary tracking-widest uppercase">
+        Academic Curator | Merit Tracking System
     </div>
 </header>
 
 <main class="ml-72 mt-20 p-12 bg-surface min-h-screen">
     
     <?php if (isset($_GET['status']) && $_GET['status'] == 'success'): ?>
-        <div class="mb-8 p-4 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 flex items-center gap-3 rounded-lg shadow-sm">
+        <div class="mb-8 p-4 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 flex items-center gap-3 rounded-xl shadow-sm">
             <span class="material-symbols-outlined">check_circle</span>
-            <span class="font-medium">Merit record successfully updated!</span>
+            <span class="font-bold text-sm">Merit record successfully logged into the system.</span>
         </div>
     <?php endif; ?>
 
     <div class="flex justify-between items-end mb-12">
         <div>
-            <span class="block text-sm font-semibold Manrope uppercase tracking-[0.15em] text-primary mb-2">Curated Contributions</span>
+            <span class="block text-xs font-bold uppercase tracking-[0.2em] text-primary mb-2">Curated Contributions</span>
             <h1 class="text-5xl font-black font-headline text-on-surface tracking-tight">Merit Tracker</h1>
         </div>
-        <a href="add_merit.php" class="signature-gradient text-white px-8 py-4 rounded-full font-bold flex items-center gap-3 shadow-xl hover:scale-[1.02] transition-transform active:scale-95 duration-150">
-            <span class="material-symbols-outlined">add_circle</span>
-            Record Merit
-        </a>
+        
+        <div class="flex flex-col items-end gap-3">
+            <?php if ($is_admin): ?>
+                <a href="add_merit.php" class="signature-gradient text-white px-10 py-5 rounded-full font-black text-xs uppercase tracking-widest flex items-center gap-3 shadow-xl hover:-translate-y-1 transition-all active:scale-95">
+                    <span class="material-symbols-outlined text-lg">add_circle</span> Record Merit
+                </a>
+            <?php else: ?>
+                <span class="bg-slate-200/50 text-slate-500 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">lock</span> Student View Mode
+                </span>
+            <?php endif; ?>
+        </div>
     </div>
 
     <div class="grid grid-cols-12 gap-6 mb-12">
-        <div class="col-span-12 md:col-span-8 bg-surface-container-lowest p-8 rounded-xl achievement-bloom shadow-sm">
-            <div class="flex justify-between items-start mb-6">
+        <div class="col-span-12 md:col-span-8 bg-white p-10 rounded-[2.5rem] achievement-bloom shadow-sm border border-slate-100">
+            <div class="flex justify-between items-start mb-10">
                 <div>
                     <h3 class="text-2xl font-bold font-headline text-primary mb-1">Volunteering & Engagement</h3>
-                    <p class="text-slate-500 text-sm">Accumulated hours tracking your active campus involvement.</p>
+                    <p class="text-slate-400 text-sm font-medium">
+                        <?php echo $is_admin ? "System-wide tracking of student active campus involvement." : "Personal hours accumulated through verified campus involvement."; ?>
+                    </p>
                 </div>
-                <span class="bg-amber-100 text-amber-700 px-4 py-1 rounded-full text-xs font-bold border border-amber-200">
-                    <?php echo ($total_hours >= 20) ? 'HONORS STATUS' : 'ACTIVE'; ?>
+                <span class="bg-amber-50 text-amber-600 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100">
+                    <?php echo ($total_hours >= 20 || $is_admin) ? 'HONORS STATUS' : 'ACTIVE'; ?>
                 </span>
             </div>
-            <div class="flex gap-16 mt-4">
+            <div class="flex gap-20">
                 <div>
-                    <span class="block text-5xl font-black font-headline text-on-surface"><?php echo number_format($total_hours, 2); ?></span>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1 block">Total Hours</span>
+                    <span class="block text-6xl font-black font-headline text-slate-800"><?php echo number_format($total_hours, 1); ?></span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 block">Total Hours</span>
                 </div>
                 <div>
-                    <span class="block text-5xl font-black font-headline text-on-surface"><?php echo str_pad($total_records, 2, '0', STR_PAD_LEFT); ?></span>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1 block">Activities Logged</span>
+                    <span class="block text-6xl font-black font-headline text-slate-800"><?php echo str_pad($total_records, 2, '0', STR_PAD_LEFT); ?></span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 block">Records Logged</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden border border-slate-100">
-        <div class="px-8 py-6 flex justify-between items-center bg-surface-container-low/50">
-            <h2 class="text-lg font-bold font-headline text-on-surface">Merit History</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm text-center">
+            <h5 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-6">Engagement Trend (Hours/Month)</h5>
+            <div style="height: 250px;"><canvas id="meritTrendChart"></canvas></div>
+        </div>
+        <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm text-center">
+            <h5 class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-6">Activity Source Breakdown</h5>
+            <div style="height: 250px;"><canvas id="organizerChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-8 py-6 bg-slate-50/50 border-b border-slate-100">
+            <h2 class="text-lg font-bold font-headline text-slate-800">Merit History Log</h2>
         </div>
         
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50/50">
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] font-label">Activity & Organizer</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] font-label">Date Completed</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] font-label">Hours</th>
-                        <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] font-label text-right">Action</th>
+                    <tr class="bg-white border-b border-slate-50">
+                        <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Activity & Organizer</th>
+                        <?php if ($is_admin): ?>
+                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Student</th>
+                        <?php endif; ?>
+                        <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Completion Date</th>
+                        <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Duration</th>
+                        <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
-                    <?php if (count($all_merits) > 0): ?>
+                <tbody class="divide-y divide-slate-50">
+                    <?php if ($total_records > 0): ?>
                         <?php foreach ($all_merits as $merit): ?>
-                            <tr class="hover:bg-surface-container-low transition-colors group">
+                            <tr class="hover:bg-slate-50/50 transition-colors group">
                                 <td class="px-8 py-6">
                                     <div class="flex items-center gap-4">
-                                        <div class="w-10 h-10 min-w-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+                                        <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-primary shadow-sm">
+                                            <span class="material-symbols-outlined">military_tech</span>
                                         </div>
                                         <div class="flex flex-col">
-                                            <span class="font-bold text-on-surface font-headline">
-                                                <?php echo htmlspecialchars($merit['event_name'] ?? $merit['organizer']); ?>
-                                            </span>
-                                            <span class="text-[11px] text-slate-500 font-semibold tracking-wide uppercase mt-0.5">
-                                                ORG: <?php echo htmlspecialchars($merit['organizer']); ?>
-                                            </span>
+                                            <span class="font-bold text-slate-800"><?php echo htmlspecialchars($merit['event_name'] ?? 'General Activity'); ?></span>
+                                            <span class="text-[9px] text-slate-400 font-black uppercase tracking-tighter mt-1">ORG: <?php echo htmlspecialchars($merit['organizer']); ?></span>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-8 py-6 text-sm text-slate-600 font-medium">
-                                    <?php echo date('d M Y', strtotime($merit['date_completed'])); ?>
-                                </td>
+                                <?php if ($is_admin): ?>
+                                    <td class="px-8 py-6 text-sm font-bold text-primary"><?php echo htmlspecialchars($merit['student_name']); ?></td>
+                                <?php endif; ?>
+                                <td class="px-8 py-6 text-sm text-slate-500 font-bold"><?php echo date('d M Y', strtotime($merit['date_completed'])); ?></td>
                                 <td class="px-8 py-6">
-                                    <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold shadow-sm">
-                                        + <?php echo number_format($merit['hours'], 1); ?> hrs
-                                    </span>
+                                    <span class="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-[10px] font-black uppercase tracking-widest">+ <?php echo number_format($merit['hours'], 1); ?> hrs</span>
                                 </td>
                                 <td class="px-8 py-6 text-right">
-                                    <div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <a href="edit_merit.php?id=<?php echo $merit['merit_id']; ?>" title="Edit" class="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all">
-                                            <span class="material-symbols-outlined text-lg">edit</span>
-                                        </a>
-                                        <a href="delete_merit.php?id=<?php echo $merit['merit_id']; ?>" onclick="return confirm('Are you sure you want to delete this merit record?')" title="Delete" class="p-2 text-slate-400 hover:text-error hover:bg-error/10 rounded-lg transition-all">
-                                            <span class="material-symbols-outlined text-lg">delete</span>
-                                        </a>
+                                    <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <?php if ($is_admin): ?>
+                                            <a href="edit_merit.php?id=<?php echo $merit['merit_id']; ?>" class="p-2 bg-blue-50 text-primary rounded-lg hover:bg-primary hover:text-white transition-all"><span class="material-symbols-outlined text-lg">edit</span></a>
+                                            <a href="delete_merit.php?id=<?php echo $merit['merit_id']; ?>" onclick="return confirm('Remove this record?')" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"><span class="material-symbols-outlined text-lg">delete</span></a>
+                                        <?php else: ?>
+                                            <span class="text-[9px] font-black text-slate-300 uppercase italic">Verified Record</span>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr>
-                            <td colspan="4" class="px-8 py-16 text-center">
-                                <div class="flex flex-col items-center justify-center text-slate-400">
-                                    <span class="material-symbols-outlined text-6xl mb-4 opacity-50">volunteer_activism</span>
-                                    <p class="font-medium text-lg text-slate-600">No merit records found.</p>
-                                    <p class="text-sm mt-1 mb-4">Start recording your volunteering hours to build your profile.</p>
-                                    <a href="add_merit.php" class="text-primary font-bold hover:underline">Record first merit →</a>
-                                </div>
-                            </td>
-                        </tr>
+                        <tr><td colspan="6" class="px-8 py-20 text-center text-slate-300 font-bold uppercase text-[10px] tracking-[0.2em]">No engagement records found</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
-        <div class="px-8 py-4 border-t border-slate-100 flex justify-between items-center text-xs font-semibold text-slate-400 font-label">
-            <span>Showing <?php echo $total_records; ?> records</span>
-        </div>
     </div>
 </main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 1. Merit Hours Bar Chart
+    new Chart(document.getElementById('meritTrendChart'), {
+        type: 'bar',
+        data: {
+            labels: <?php echo json_encode($trend_labels); ?>,
+            datasets: [{ label: 'Hours', data: <?php echo json_encode($trend_data); ?>, backgroundColor: '#003f87', borderRadius: 8 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+        }
+    });
+
+    // 2. Organizer Distribution Doughnut Chart
+    new Chart(document.getElementById('organizerChart'), {
+        type: 'doughnut',
+        data: {
+            labels: <?php echo json_encode($org_labels); ?>,
+            datasets: [{ data: <?php echo json_encode($org_data); ?>, backgroundColor: ['#003f87', '#fda085', '#00c6ff', '#a18cd1', '#fbc2eb'], borderWidth: 0 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { font: { weight: 'bold', size: 10 }, padding: 15 } } }
+        }
+    });
+</script>
 
 </body>
 </html>

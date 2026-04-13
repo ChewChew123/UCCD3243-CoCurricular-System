@@ -3,7 +3,12 @@ session_start();
 require('../../database/db_connect.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $user_id = $_SESSION['user_id'];
+    // only admin
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    die("Access Denied");
+}
+
+$user_id = $_POST['target_user_id'];
     
     // 接收 event_id (如果是 Independent Activity 就是 NULL)
     $event_id = !empty($_POST['event_id']) ? intval($_POST['event_id']) : NULL; 

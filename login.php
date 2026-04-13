@@ -9,7 +9,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $sql = "SELECT user_id, password FROM users WHERE username = ?";
+    $sql = "SELECT user_id, password, role FROM users WHERE username = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $username);
     $stmt->execute();
@@ -19,6 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['username'] = $username;
+            $_SESSION['role'] = $user['role'];
 
             if (isset($_POST['remember-me'])) {
                 setcookie("remember_user", $username, time() + (30 * 24 * 60 * 60), "/");

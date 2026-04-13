@@ -3,22 +3,23 @@
 session_start();
 require('../../includes/db_connect.php');
 
-// Security check: Ensure user is logged in
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
-    $user_id = $_SESSION['user_id'];
+// 🌟 Security check: 确保用户已登录，并且必须是 Admin 身份
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id']) && isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+    
     $achievement_id = $_POST['achievement_id'];
     $title = $_POST['achievement_title'];
     $category = $_POST['achievement_category'];
     $level = $_POST['level'];
     $issuer = $_POST['issuer'];
     $date = $_POST['date_received'];
-    $description = $_POST['achievement_description']; // Fixed: Added description
+    $description = $_POST['achievement_description']; 
     $event_id = !empty($_POST['event_id']) ? $_POST['event_id'] : null;
 
     // 1. Retrieve the existing image to handle replacement
-    $sql_img = "SELECT certificate_image FROM achievements WHERE achievement_id = ? AND user_id = ?";
+    // 🌟 FIXED: 移除了 'AND user_id = ?'，因为 Admin 可以修改任何人的记录
+    $sql_img = "SELECT certificate_image FROM achievements WHERE achievement_id = ?";
     $stmt_img = $conn->prepare($sql_img);
-    $stmt_img->bind_param("ii", $achievement_id, $user_id);
+    $stmt_img->bind_param("i", $achievement_id);
     $stmt_img->execute();
     $res_img = $stmt_img->get_result();
     $old_data = $res_img->fetch_assoc();
@@ -49,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
     }
 
     // 3. Update Database Record
+    // 🌟 FIXED: 移除了 WHERE 语句里的 'AND user_id = ?'
     $sql_update = "UPDATE achievements SET 
                     achievement_title = ?, 
                     achievement_category = ?, 
@@ -58,14 +60,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['user_id'])) {
                     certificate_image = ?, 
                     achievement_description = ?, 
                     event_id = ? 
-                   WHERE achievement_id = ? AND user_id = ?";
+                   WHERE achievement_id = ?";
     
     $stmt_up = $conn->prepare($sql_update);
-    // Data types: string x7, int x1, int x2 (ID and UserID)
-    $stmt_up->bind_param("sssssssiii", $title, $category, $level, $issuer, $date, $new_image_name, $description, $event_id, $achievement_id, $user_id);
+    
+    // 🌟 FIXED: bind_param 改成了 9 个参数 ("sssssssii")，去掉了最后的 user_id
+    $stmt_up->bind_param("sssssssii", $title, $category, $level, $issuer, $date, $new_image_name, $description, $event_id, $achievement_id);
 
     if ($stmt_up->execute()) {
         header("Location: index.php?msg=updated");
+        exit(); 
     } else {
         echo "Update Error: " . $conn->error;
     }

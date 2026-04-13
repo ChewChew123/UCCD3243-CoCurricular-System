@@ -184,8 +184,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['create_club'])) {
             <div class="h-[1px] bg-slate-100 my-8"></div>
 
             <div class="flex items-center justify-between">
-                <a href="join.php" class="text-sm font-bold text-slate-400 hover:text-primary transition-colors flex items-center gap-1">
-                    Skip & Join Existing
+                <a href="index.php" class="text-sm font-bold text-slate-400 hover:text-primary transition-colors flex items-center gap-1">
+                    Back
                 </a>
                 <button type="submit" name="create_club" class="signature-gradient text-white font-bold px-10 py-3 rounded-full shadow-lg hover:opacity-90 active:scale-95 transition-all outline-none flex items-center gap-2">
                     <span class="material-symbols-outlined">add_business</span>

@@ -1,32 +1,50 @@
 <?php
-require('../../database/db_connect.php');
+/**
+ * File: recycle_action.php
+ * Purpose: Backend logic for restoring or permanently deleting events.
+ */
+session_start();
+require_once '../../includes/db_connect.php'; 
 
-// SINGLE RESTORE
+// Check admin privilege
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    die("Unauthorized Access.");
+}
+
+// HANDLE SINGLE RESTORE (via GET)
 if (isset($_GET['restore'])) {
-    $id = $_GET['restore'];
-    mysqli_query($conn, "UPDATE events SET deleted = 0 WHERE event_id = '$id'");
-    header("Location: recently_deleted.php");
+    $id = intval($_GET['restore']);
+    $sql = "UPDATE events SET deleted = 0 WHERE event_id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    
+    header("Location: recently_deleted.php?msg=restored");
     exit;
 }
 
-// BULK ACTION
-if (isset($_POST['action'])) {
-    $ids = $_POST['ids'] ?? [];
+// HANDLE BULK ACTIONS (via POST)
+if (isset($_POST['action']) && !empty($_POST['ids'])) {
+    $ids = $_POST['ids'];
     $action = $_POST['action'];
 
-    if ($action == 'permanent_delete') {
-        foreach ($ids as $id) {
+    foreach ($ids as $id) {
+        $id = intval($id);
+        if ($action == 'permanent_delete') {
+            // Remove completely from DB
             mysqli_query($conn, "DELETE FROM events WHERE event_id = '$id'");
-        }
-    }
-
-    if ($action == 'restore') {
-        foreach ($ids as $id) {
+        } elseif ($action == 'restore') {
+            // Set deleted back to 0
             mysqli_query($conn, "UPDATE events SET deleted = 0 WHERE event_id = '$id'");
         }
     }
 
-    header("Location: recently_deleted.php");
+    $msg = ($action == 'restore') ? 'restored' : 'deleted';
+    header("Location: recently_deleted.php?msg=$msg");
     exit;
 }
+
+// Fallback redirect
+header("Location: recently_deleted.php");
+exit;
 ?>
