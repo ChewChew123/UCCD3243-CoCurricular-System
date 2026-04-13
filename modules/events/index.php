@@ -287,9 +287,23 @@ $all_events = $ae_stmt->get_result();
             <?php while($event = $all_events->fetch_assoc()): ?>
             <div class="bg-white rounded-[2.5rem] p-3 border border-slate-100 event-card transition-all duration-300 flex flex-col">
                 <div class="w-full h-44 bg-slate-100 rounded-[2rem] mb-6 overflow-hidden relative group">
-                    <a href="event_details.php?event_id=<?php echo $event['event_id']; ?>" class="absolute inset-0 bg-blue-900/0 group-hover:bg-blue-900/40 transition-colors flex items-center justify-center z-10">
-                        <span class="material-symbols-outlined text-white opacity-0 group-hover:opacity-100 text-4xl transition-opacity">visibility</span>
+                    <?php if (!empty($event['event_poster'])): ?>
+                        <img src="uploads/<?php echo htmlspecialchars($event['event_poster']); ?>" 
+                            alt="Event Poster"
+                            class="w-full h-full object-cover absolute inset-0 z-0">
+                    <?php else: ?>
+                        <img src="../../uploads/default.png" 
+                            alt="Default Poster"
+                            class="w-full h-full object-cover absolute inset-0 z-0">
+                    <?php endif; ?>
+
+                    <a href="event_details.php?event_id=<?php echo $event['event_id']; ?>" 
+                    class="absolute inset-0 bg-blue-900/0 group-hover:bg-blue-900/40 transition-colors flex items-center justify-center z-10">
+                        <span class="material-symbols-outlined text-white opacity-0 group-hover:opacity-100 text-4xl transition-opacity">
+                            visibility
+                        </span>
                     </a>
+
                     <div class="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[9px] font-black text-primary uppercase z-20">
                         <?php echo htmlspecialchars($event['event_type']); ?>
                     </div>
