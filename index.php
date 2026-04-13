@@ -119,10 +119,12 @@ $recent_activities = $r_stmt->get_result();
         </div>
     </div>
 
+  <?php if (!$is_admin): ?>
     <a href="modules/clubs/join.php" class="py-3 px-4 signature-gradient text-white rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2">
         <span class="material-symbols-outlined text-sm">add</span>
         New Activity
     </a>
+  <?php endif; ?>
 
     <nav class="flex-1 space-y-2">
         <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-blue-50/50 text-blue-800 font-bold border-r-4 border-blue-800" href="index.php">
@@ -248,6 +250,7 @@ $recent_activities = $r_stmt->get_result();
                 </div>
             </div>
 
+            <?php if (!$is_admin): ?>
             <div class="space-y-6">
                 <h2 class="text-xl font-bold font-headline text-slate-800">Explore</h2>
                 <div class="signature-gradient p-8 rounded-3xl text-white shadow-lg space-y-6">
@@ -261,6 +264,7 @@ $recent_activities = $r_stmt->get_result();
                     </a>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 </main>

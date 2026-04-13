@@ -118,12 +118,6 @@ $all_events = $ae_stmt->get_result();
         </div>
     </div>
 
-    <?php if ($is_admin): ?>
-    <a href="add_event.php" class="py-3 px-4 signature-gradient text-white rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2">
-        <span class="material-symbols-outlined text-sm">add</span> New Activity
-    </a>
-    <?php endif; ?>
-
     <nav class="flex-1 space-y-2">
         <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:bg-slate-100" href="../../index.php"><span class="material-symbols-outlined">dashboard</span><span class="text-sm font-semibold uppercase tracking-wider">Overview</span></a>
         <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-blue-50 text-blue-800 font-bold border-r-4 border-blue-800" href="index.php"><span class="material-symbols-outlined">event_note</span><span class="text-sm font-semibold uppercase tracking-wider">Events</span></a>
