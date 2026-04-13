@@ -78,7 +78,12 @@ CREATE TABLE `events` (
   `event_name` varchar(150) NOT NULL,
   `event_type` varchar(50) DEFAULT NULL,
   `event_location` varchar(150) DEFAULT NULL,
-  `event_date` date DEFAULT NULL
+  `event_date` date DEFAULT NULL,
+  `event_time` time NOT NULL,
+  `date_record` datetime NOT NULL,
+  `deleted` tinyint(1) DEFAULT 0,
+  `event_poster` varchar(255) DEFAULT NULL,
+  `register_expired_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
