@@ -247,8 +247,8 @@ New Activity
 <!-- Context Header -->
 <div class="mb-12 text-center">
 <span class="text-primary font-bold tracking-widest uppercase text-[10px] mb-2 block">New Membership</span>
-<h1 class="font-headline font-extrabold text-5xl text-on-surface tracking-tight mb-4 text-blue-900">Expand Your Horizon</h1>
-<p class="text-slate-500 max-w-md mx-auto text-lg leading-relaxed">Curate your student journey by joining organizations that align with your professional goals.</p>
+<h1 class="font-headline font-extrabold text-5xl text-on-surface tracking-tight mb-4 text-blue-900">Enrich Your Co-curricular Records</h1>
+<p class="text-slate-500 max-w-md mx-auto text-lg leading-relaxed">Elevate your campus experience and accumulate merit points by joining organizations that shape your future.</p>
 </div>
 
 <?php if ($error): ?>
@@ -263,7 +263,7 @@ New Activity
 <form method="POST" action="join.php" class="space-y-8 relative z-10 text-left">
 <!-- Club Selection -->
 <div class="space-y-3">
-<label class="block text-xs font-black tracking-widest text-slate-400 uppercase px-1">Select Organization</label>
+<label class="block text-xs font-black tracking-widest text-slate-400 uppercase px-1">Select Club/Society</label>
 <div class="relative group">
 <select name="club_id" required class="w-full appearance-none bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-6 py-4 text-on-surface focus:ring-2 focus:ring-primary transition-all duration-300">
 <option disabled="" selected="" value="">Choose a club...</option>

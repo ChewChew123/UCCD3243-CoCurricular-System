@@ -65,79 +65,21 @@ $total_clubs = count($all_memberships);
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Club Membership Dashboard | The Academic Curator</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700;800&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                    "on-primary-fixed": "#001a40",
-                    "surface-container": "#e6eff8",
-                    "surface-bright": "#f6faff",
-                    "error": "#ba1a1a",
-                    "secondary-fixed-dim": "#c4c7ca",
-                    "on-primary-fixed-variant": "#004491",
-                    "outline-variant": "#c2c6d4",
-                    "tertiary-fixed-dim": "#ffb694",
-                    "secondary": "#5b5f62",
-                    "outline": "#727784",
-                    "on-error-container": "#93000a",
-                    "on-error": "#ffffff",
-                    "error-container": "#ffdad6",
-                    "surface-container-lowest": "#ffffff",
-                    "on-tertiary-fixed": "#351000",
-                    "on-secondary-fixed": "#181c1e",
-                    "on-surface-variant": "#424752",
-                    "primary-container": "#0056b3",
-                    "on-tertiary": "#ffffff",
-                    "primary-fixed": "#d7e2ff",
-                    "on-background": "#141d23",
-                    "surface-dim": "#d2dbe4",
-                    "surface-tint": "#115cb9",
-                    "on-tertiary-container": "#ffc2a7",
-                    "on-surface": "#141d23",
-                    "primary-fixed-dim": "#acc7ff",
-                    "tertiary": "#722b00",
-                    "primary": "#003f87",
-                    "surface-container-highest": "#dbe4ed",
-                    "surface-container-high": "#e0e9f2",
-                    "on-primary-container": "#bbd0ff",
-                    "on-primary": "#ffffff",
-                    "on-secondary-container": "#5f6366",
-                    "secondary-fixed": "#e0e3e6",
-                    "on-tertiary-fixed-variant": "#7b2f00",
-                    "tertiary-fixed": "#ffdbcc",
-                    "surface-variant": "#dbe4ed",
-                    "surface": "#f6faff",
-                    "surface-container-low": "#ecf5fe",
-                    "background": "#f6faff",
-                    "inverse-primary": "#acc7ff",
-                    "inverse-surface": "#293138",
-                    "secondary-container": "#dde0e3",
-                    "on-secondary": "#ffffff",
-                    "on-secondary-fixed-variant": "#43474a",
-                    "tertiary-container": "#983c00",
-                    "inverse-on-surface": "#e9f2fb"
-            },
-            "borderRadius": {
-                    "DEFAULT": "0.125rem",
-                    "lg": "0.25rem",
-                    "xl": "0.5rem",
-                    "full": "0.75rem"
-            },
-            "fontFamily": {
-                    "headline": ["Manrope"],
-                    "body": ["Inter"],
-                    "label": ["Inter"]
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: { "primary": "#003f87", "surface": "#f6faff", "on-surface": "#141d23" },
+                    fontFamily: { "headline": ["Manrope"], "body": ["Inter"] }
+                }
             }
-          },
-        },
-      }
+        }
     </script>
-<style>
+    <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
         .signature-gradient { background: linear-gradient(135deg, #003f87 0%, #0056b3 100%); }
         .achievement-bloom { position: relative; overflow: hidden; }
@@ -145,56 +87,11 @@ $total_clubs = count($all_memberships);
     </style>
 </head>
 <body class="bg-background text-on-background font-body">
-<aside class="h-screen w-72 fixed left-0 top-0 bg-white dark:bg-slate-900 flex flex-col p-6 space-y-8 z-50 border-r border-slate-100 dark:border-slate-800 shadow-sm">
-<div class="flex items-center gap-3">
-<div class="w-10 h-10 signature-gradient rounded-xl flex items-center justify-center text-white">
-<span class="material-symbols-outlined">auto_stories</span>
-</div>
-<div class="text-2xl font-bold tracking-tight text-blue-900 dark:text-blue-100 font-headline">Academic Curator</div>
-</div>
-
-<div class="flex items-center gap-3 px-2 py-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-<img class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" src="https://ui-avatars.com/api/?name=<?php echo urlencode($user_data['full_name']); ?>&background=003f87&color=fff" alt="User">
-<div class="overflow-hidden">
-<p class="text-sm font-bold text-slate-800 dark:text-slate-200 truncate"><?php echo htmlspecialchars($full_name); ?></p>
-<p class="text-[10px] font-bold text-primary uppercase tracking-wider truncate"><?php echo htmlspecialchars($programme); ?></p>
-</div>
-</div>
-
-<nav class="flex-1 space-y-2">
-<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-200 dark:hover:bg-slate-800/50" href="../../index.php">
-<span class="material-symbols-outlined">dashboard</span>
-<span class="text-sm font-semibold Manrope uppercase tracking-wider">Overview</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-200 dark:hover:bg-slate-800/50" href="../events/index.php">
-<span class="material-symbols-outlined">event_note</span>
-<span class="text-sm font-semibold Manrope uppercase tracking-wider">Events</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-200 dark:hover:bg-slate-800/50" href="../achievements/index.php">
-<span class="material-symbols-outlined">verified</span>
-<span class="text-sm font-semibold Manrope uppercase tracking-wider">Achievements</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-200 dark:hover:bg-slate-800/50" href="../merits/index.php">
-<span class="material-symbols-outlined">military_tech</span>
-<span class="text-sm font-semibold Manrope uppercase tracking-wider">Merits</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-blue-50/50 text-blue-800 font-bold border-r-4 border-blue-800" href="index.php">
-<span class="material-symbols-outlined">groups</span>
-<span class="text-sm font-semibold Manrope uppercase tracking-wider">Club Memberships</span>
-</a>
-<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-slate-200 dark:hover:bg-slate-800/50" href="../../profile.php">
-<span class="material-symbols-outlined">person</span>
-<span class="text-sm font-semibold Manrope uppercase tracking-wider">My Profile</span>
-</a>
-</nav>
-
-<div class="pt-6 border-t border-slate-200/50 space-y-2">
-<a class="flex items-center gap-3 px-4 py-3 text-slate-500 dark:text-slate-400 hover:text-blue-600 transition-colors" href="../../logout.php">
-<span class="material-symbols-outlined">logout</span>
-<span class="text-xs font-semibold Manrope uppercase tracking-wider">Log Out</span>
-</a>
-</div>
-</aside>
+<?php 
+$base_path = "../../"; 
+$current_page = "clubs"; 
+include '../../includes/sidebar.php'; 
+?>
 <header class="fixed top-0 right-0 left-72 bg-slate-50 dark:bg-slate-950 flex justify-between items-center px-8 py-4 z-40 border-b border-slate-100 dark:border-slate-800">
 <div class="flex-1 max-w-xl">
 <div class="relative">

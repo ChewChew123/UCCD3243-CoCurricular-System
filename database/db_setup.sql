@@ -52,6 +52,17 @@ CREATE TABLE `clubs` (
   `club_description` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `clubs`
+--
+
+INSERT INTO `clubs` (`club_id`, `club_name`, `club_category`, `club_description`) VALUES
+(1, 'Information Systems Society', 'STEM', 'Fostering excellence in information systems and technology through workshops and networking.'),
+(2, 'IT Society', 'STEM', 'A community of IT enthusiasts exploring emerging technologies and digital innovation.'),
+(3, 'Wushu Club', 'Athletics', 'Promoting martial arts excellence and traditional cultural values through training.'),
+(4, 'Chess Club', 'Leisure', 'Enhancing strategic thinking and sportsmanship through the game of chess.'),
+(5, 'Voluntary Service Society', 'Volunteer', 'Engaging students in community service and social responsibility projects.');
+
 -- --------------------------------------------------------
 
 --
@@ -131,6 +142,7 @@ CREATE TABLE `users` (
   `academic_year` varchar(20) DEFAULT 'Year 1',
   `faculty` varchar(100) DEFAULT 'General Faculty',
   `security_answer` varchar(255) DEFAULT NULL,
+  `role` varchar(50) DEFAULT 'student',
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -138,9 +150,9 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `username`, `password`, `full_name`, `email`, `programme`, `security_answer`, `created_at`) VALUES
-(1, '2100123', '$2y$10$y13VpUIvxOZqmDnndF.otu5WOp/XHWWDLhRk2iwvpWeW7NWyZe3bq', 'chuah', 'chuah@1utar.my', NULL, NULL, '2026-03-29 05:02:14'),
-(2, '1222222', '$2y$10$hDX5P37TtEFdEwuvY6v6Mu/AC5atXILUHI1Ja3f4OooP4JPOKCa4.', 'chuah2', 'stu@1utar.my', 'cs', NULL, '2026-03-29 05:02:59');
+INSERT INTO `users` (`user_id`, `username`, `password`, `full_name`, `email`, `programme`, `security_answer`, `role`, `created_at`) VALUES
+(1, '2100123', '$2y$10$y13VpUIvxOZqmDnndF.otu5WOp/XHWWDLhRk2iwvpWeW7NWyZe3bq', 'chuah', 'chuah@1utar.my', NULL, NULL, 'student', '2026-03-29 05:02:14'),
+(2, '1222222', '$2y$10$hDX5P37TtEFdEwuvY6v6Mu/AC5atXILUHI1Ja3f4OooP4JPOKCa4.', 'chuah2', 'stu@1utar.my', 'cs', NULL, 'student', '2026-03-29 05:02:59');
 
 --
 -- Indexes for dumped tables

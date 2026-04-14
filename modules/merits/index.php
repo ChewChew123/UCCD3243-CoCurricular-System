@@ -108,11 +108,12 @@ while($r = $res_org->fetch_assoc()){
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Merit Tracker | Academic Curator</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
         tailwind.config = {
+            darkMode: "class",
             theme: {
                 extend: {
                     colors: { "primary": "#003f87", "surface": "#f6faff", "on-surface": "#141d23" },
@@ -130,37 +131,11 @@ while($r = $res_org->fetch_assoc()){
 </head>
 <body class="bg-surface text-on-surface font-body min-h-screen">
 
-<aside class="h-screen w-72 fixed left-0 top-0 bg-white flex flex-col p-6 space-y-8 z-50 border-r border-slate-100 shadow-sm">
-    <div class="flex items-center gap-3">
-        <div class="w-10 h-10 signature-gradient rounded-xl flex items-center justify-center text-white">
-            <span class="material-symbols-outlined">auto_stories</span>
-        </div>
-        <div class="text-2xl font-bold tracking-tight text-blue-900 font-headline">Academic Curator</div>
-    </div>
-
-    <div class="flex items-center gap-3 px-2 py-4 bg-slate-50 rounded-2xl">
-        <img class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" src="https://ui-avatars.com/api/?name=<?php echo urlencode($full_name); ?>&background=003f87&color=fff" alt="User">
-        <div class="overflow-hidden">
-            <p class="text-sm font-bold text-slate-800 truncate"><?php echo htmlspecialchars($full_name); ?></p>
-            <p class="text-[10px] font-bold text-primary uppercase tracking-wider truncate"><?php echo htmlspecialchars($programme); ?></p>
-        </div>
-    </div>
-
-    <nav class="flex-1 space-y-2">
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:bg-slate-100" href="../../index.php"><span class="material-symbols-outlined">dashboard</span><span class="text-sm font-semibold uppercase tracking-wider">Overview</span></a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:bg-slate-100" href="../events/index.php"><span class="material-symbols-outlined">event_note</span><span class="text-sm font-semibold uppercase tracking-wider">Events</span></a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:bg-slate-100" href="../achievements/index.php"><span class="material-symbols-outlined">verified</span><span class="text-sm font-semibold uppercase tracking-wider">Achievements</span></a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-blue-50 text-blue-800 font-bold border-r-4 border-blue-800" href="index.php"><span class="material-symbols-outlined">military_tech</span><span class="text-sm font-semibold uppercase tracking-wider">Merits</span></a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:bg-slate-100" href="../clubs/index.php"><span class="material-symbols-outlined">groups</span><span class="text-sm font-semibold uppercase tracking-wider">Clubs</span></a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:bg-slate-100" href="../../profile.php"><span class="material-symbols-outlined">person</span><span class="text-sm font-semibold uppercase tracking-wider">My Profile</span></a>
-    </nav>
-
-    <div class="pt-6 border-t border-slate-200/50">
-        <a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-red-600 transition-colors" href="../../logout.php">
-            <span class="material-symbols-outlined">logout</span><span class="text-xs font-semibold uppercase tracking-wider">Log Out</span>
-        </a>
-    </div>
-</aside>
+<?php 
+$base_path = "../../"; 
+$current_page = "merits"; 
+include '../../includes/sidebar.php'; 
+?>
 
 <header class="fixed top-0 right-0 left-72 bg-white/80 backdrop-blur-md flex justify-between items-center px-8 py-4 z-40 border-b border-slate-100">
     <div class="flex-1 max-w-xl text-sm font-bold text-primary tracking-widest uppercase">

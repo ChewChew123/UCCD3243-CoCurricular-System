@@ -78,17 +78,17 @@ $recent_activities = $r_stmt->get_result();
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script id="tailwind-config">
+    <script>
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
-                    "colors": {
+                    colors: {
                         "primary": "#003f87",
                         "surface": "#f6faff",
                         "on-surface": "#141d23"
                     },
-                    "fontFamily": {
+                    fontFamily: {
                         "headline": ["Manrope"],
                         "body": ["Inter"]
                     }
@@ -103,63 +103,13 @@ $recent_activities = $r_stmt->get_result();
 </head>
 <body class="bg-surface text-on-surface">
 
-<aside class="h-screen w-72 fixed left-0 top-0 bg-white dark:bg-slate-900 flex flex-col p-6 space-y-8 z-50 border-r border-slate-100 dark:border-slate-800">
-    <div class="flex items-center gap-3">
-        <div class="w-10 h-10 signature-gradient rounded-xl flex items-center justify-center text-white">
-            <span class="material-symbols-outlined">auto_stories</span>
-        </div>
-        <div class="text-2xl font-bold tracking-tight text-blue-900 dark:text-blue-100 font-headline">Academic Curator</div>
-    </div>
-
-    <div class="flex items-center gap-3 px-2 py-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-       <img class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" src="https://ui-avatars.com/api/?name=<?php echo urlencode($user_data['full_name']); ?>&background=003f87&color=fff" alt="User">
-        <div class="overflow-hidden">
-            <p class="text-sm font-bold text-slate-800 dark:text-slate-200 truncate"><?php echo htmlspecialchars($user_data['full_name']); ?></p>
-            <p class="text-[10px] font-bold text-primary uppercase tracking-wider truncate"><?php echo htmlspecialchars($user_data['programme']); ?></p>
-        </div>
-    </div>
-
-  <?php if (!$is_admin): ?>
-    <a href="modules/clubs/join.php" class="py-3 px-4 signature-gradient text-white rounded-full font-bold text-sm shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2">
-        <span class="material-symbols-outlined text-sm">add</span>
-        New Activity
-    </a>
-  <?php endif; ?>
-
-    <nav class="flex-1 space-y-2">
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-blue-50/50 text-blue-800 font-bold border-r-4 border-blue-800" href="index.php">
-            <span class="material-symbols-outlined">dashboard</span>
-            <span class="text-sm font-semibold Manrope uppercase tracking-wider">Overview</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:text-blue-600 hover:bg-slate-200" href="modules/events/index.php">
-            <span class="material-symbols-outlined">event_note</span>
-            <span class="text-sm font-semibold Manrope uppercase tracking-wider">Events</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:text-blue-600 hover:bg-slate-200" href="modules/achievements/index.php">
-            <span class="material-symbols-outlined">verified</span>
-            <span class="text-sm font-semibold Manrope uppercase tracking-wider">Achievements</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:text-blue-600 hover:bg-slate-200" href="modules/merits/index.php">
-            <span class="material-symbols-outlined">military_tech</span>
-            <span class="text-sm font-semibold Manrope uppercase tracking-wider">Merits</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:text-blue-600 hover:bg-slate-200" href="modules/clubs/index.php">
-            <span class="material-symbols-outlined">groups</span>
-            <span class="text-sm font-semibold Manrope uppercase tracking-wider">Club Memberships</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-500 hover:text-blue-600 hover:bg-slate-200" href="profile.php">
-            <span class="material-symbols-outlined">person</span>
-            <span class="text-sm font-semibold Manrope uppercase tracking-wider">My Profile</span>
-        </a>
-    </nav>
-
-    <div class="pt-6 border-t border-slate-200/50 space-y-2">
-        <a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 transition-colors" href="logout.php">
-            <span class="material-symbols-outlined">logout</span>
-            <span class="text-xs font-semibold Manrope uppercase tracking-wider">Log Out</span>
-        </a>
-    </div>
-</aside>
+<?php 
+$base_path = ""; 
+$current_page = "overview"; 
+$full_name = $user_data['full_name'];
+$programme = $user_data['programme'];
+include 'includes/sidebar.php'; 
+?>
 
 <header class="flex justify-between items-center h-20 px-8 ml-72 fixed top-0 w-[calc(100%-18rem)] z-40 bg-white/80 backdrop-blur-md border-b border-slate-100">
     <div class="flex items-center gap-4">
