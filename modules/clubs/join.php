@@ -31,15 +31,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_join'])) {
     if (empty($club_id) || empty($role)) {
         $error = "Please select both a club and a role.";
     } else {
-        // Prevention Logic: Check for existing membership
-        $check_sql = "SELECT member_id FROM club_members WHERE user_id = ? AND club_id = ?";
-        $check_stmt = $conn->prepare($check_sql);
-        $check_stmt->bind_param("ii", $user_id, $club_id);
-        $check_stmt->execute();
-        $check_result = $check_stmt->get_result();
+        // [Logic Upgrade 1] Count Active Clubs (Limit 5)
+        $limit_sql = "SELECT COUNT(*) as active_count FROM club_members WHERE user_id = ? AND member_status = 'Active'";
+        $limit_stmt = $conn->prepare($limit_sql);
+        $limit_stmt->bind_param("i", $user_id);
+        $limit_stmt->execute();
+        $active_count = $limit_stmt->get_result()->fetch_assoc()['active_count'];
 
-        if ($check_result->num_rows > 0) {
-            $error = "You are already a member of this club!";
+        if ($active_count >= 5) {
+            $error = "Maximum enrollment reached. You cannot lead more than 5 active clubs simultaneously to ensure academic balance.";
         } else {
             // Insert Operation
             // CHANGED: Status defaults to 'Pending' so Admin can approve it later.
@@ -47,11 +47,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_join'])) {
             $insert_stmt = $conn->prepare($insert_sql);
             $insert_stmt->bind_param("iis", $user_id, $club_id, $role);
 
-            if ($insert_stmt->execute()) {
-                header("Location: index.php?join=success");
-                exit();
+            // Prevention Logic: Check for existing membership (Ignore 'Past' historical records)
+            $check_sql = "SELECT member_id FROM club_members WHERE user_id = ? AND club_id = ? AND member_status IN ('Active', 'Pending')";
+            $check_stmt = $conn->prepare($check_sql);
+            $check_stmt->bind_param("ii", $user_id, $club_id);
+            $check_stmt->execute();
+            $check_result = $check_stmt->get_result();
+
+            if ($check_result->num_rows > 0) {
+                $error = "You already have an active or pending application for this club!";
             } else {
-                $error = "Failed to join club. Please try again later.";
+                // Insert Operation with dynamic status
+                $insert_sql = "INSERT INTO club_members (user_id, club_id, member_role, member_status) VALUES (?, ?, ?, ?)";
+                $insert_stmt = $conn->prepare($insert_sql);
+                $insert_stmt->bind_param("iiss", $user_id, $club_id, $role, $status);
+
+                if ($insert_stmt->execute()) {
+                    $msg = ($status === 'Pending') ? "join=pending" : "join=success";
+                    header("Location: index.php?$msg");
+                    exit();
+                } else {
+                    $error = "Failed to process enrollment. Please contact the Faculty Liaison.";
+                }
             }
         }
     }
@@ -248,8 +265,8 @@ New Activity
 <!-- Context Header -->
 <div class="mb-12 text-center">
 <span class="text-primary font-bold tracking-widest uppercase text-[10px] mb-2 block">New Membership</span>
-<h1 class="font-headline font-extrabold text-5xl text-on-surface tracking-tight mb-4 text-blue-900">Expand Your Horizon</h1>
-<p class="text-slate-500 max-w-md mx-auto text-lg leading-relaxed">Curate your student journey by joining organizations that align with your professional goals.</p>
+<h1 class="font-headline font-extrabold text-5xl text-on-surface tracking-tight mb-4 text-blue-900">Enrich Your Co-curricular Records</h1>
+<p class="text-slate-500 max-w-md mx-auto text-lg leading-relaxed">Elevate your campus experience and accumulate merit points by joining organizations that shape your future.</p>
 </div>
 
 <?php if ($error): ?>
@@ -264,7 +281,7 @@ New Activity
 <form method="POST" action="join.php" class="space-y-8 relative z-10 text-left">
 <!-- Club Selection -->
 <div class="space-y-3">
-<label class="block text-xs font-black tracking-widest text-slate-400 uppercase px-1">Select Organization</label>
+<label class="block text-xs font-black tracking-widest text-slate-400 uppercase px-1">Select Club/Society</label>
 <div class="relative group">
 <select name="club_id" required class="w-full appearance-none bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-6 py-4 text-on-surface focus:ring-2 focus:ring-primary transition-all duration-300">
 <option disabled="" selected="" value="">Choose a club...</option>

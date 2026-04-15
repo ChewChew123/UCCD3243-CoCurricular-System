@@ -53,7 +53,8 @@ if ($is_admin) {
     $sql = "SELECT cm.member_id, c.club_id, c.club_name, c.club_category, cm.member_role, cm.member_status 
             FROM club_members cm 
             JOIN clubs c ON cm.club_id = c.club_id 
-            WHERE cm.user_id = ?";
+            WHERE cm.user_id = ?
+            ORDER BY FIELD(cm.member_status, 'Active', 'Pending', 'Past')";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $user_id);
 }
@@ -159,6 +160,21 @@ $total_clubs_count = count($all_memberships);
 
 <main class="ml-72 mt-20 p-12 bg-surface min-h-screen">
     
+    <!-- Feedback Notifications -->
+    <?php if (isset($_GET['join']) && $_GET['join'] == 'success'): ?>
+        <div class="mb-8 p-4 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 flex items-center gap-3 rounded-lg shadow-sm animate-in fade-in slide-in-from-top-2">
+            <span class="material-symbols-outlined">check_circle</span>
+            <span class="font-bold">Welcome to the club! Your membership is now active.</span>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['join']) && $_GET['join'] == 'pending'): ?>
+        <div class="mb-8 p-4 bg-amber-100 border-l-4 border-amber-500 text-amber-700 flex items-center gap-3 rounded-lg shadow-sm animate-in fade-in slide-in-from-top-2">
+            <span class="material-symbols-outlined">pending</span>
+            <span class="font-bold font-headline">Application Received! Your Lead Curator portfolio is currently under review by the faculty.</span>
+        </div>
+    <?php endif; ?>
+
     <?php if (isset($_GET['delete']) && $_GET['delete'] == 'success'): ?>
         <div class="mb-8 p-4 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 flex items-center gap-3 rounded-lg shadow-sm">
             <span class="material-symbols-outlined">check_circle</span>
@@ -311,6 +327,31 @@ function toggleSettingsDropdown(e) {
 document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('settings-dropdown');
     if (dropdown && !e.target.closest('.settings-btn')) dropdown.classList.add('hidden');
+});
+
+// Real-time Search Logic
+document.getElementById('clubSearch').addEventListener('keyup', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#membershipTableBody tr:not(:last-child)'); // Avoid hiding the "No records found" row if present, or we can handle it differently.
+    
+    // Better targeting: only rows with actual data (which have group class)
+    const dataRows = document.querySelectorAll('#membershipTableBody tr.group');
+
+    dataRows.forEach(row => {
+        const clubName = row.querySelector('.font-headline').textContent.toLowerCase();
+        const role = row.querySelector('.font-medium').textContent.toLowerCase();
+        // Check if admin to also search by student name
+        let studentName = '';
+        <?php if ($is_admin): ?>
+            studentName = row.cells[1].textContent.toLowerCase();
+        <?php endif; ?>
+        
+        if (clubName.includes(searchTerm) || studentName.includes(searchTerm) || role.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
 });
 </script>
 </body>

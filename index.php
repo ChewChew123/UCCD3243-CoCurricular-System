@@ -31,13 +31,13 @@ $user_data = $stmt->get_result()->fetch_assoc();
  */
 $selected_student = null;
 if ($is_admin) {
-    // 1. 全局概览统计 (Admin Only)
+    //  (Admin Only)
     $total_students = $conn->query("SELECT COUNT(*) FROM users WHERE role = 'student'")->fetch_row()[0];
     $total_clubs = $conn->query("SELECT COUNT(*) FROM clubs")->fetch_row()[0];
     $total_events = $conn->query("SELECT COUNT(*) FROM events WHERE deleted = 0")->fetch_row()[0];
     $total_achievements = $conn->query("SELECT COUNT(*) FROM achievements")->fetch_row()[0];
 
-    // 2. 学生个体审查逻辑 (Spotlight Search)
+    // (Spotlight Search)
     if (isset($_GET['lookup_id']) && !empty($_GET['lookup_id'])) {
         $sid = $_GET['lookup_id'];
         $s_sql = "SELECT u.*, 
@@ -52,7 +52,6 @@ if ($is_admin) {
         $selected_student = $s_stmt->get_result()->fetch_assoc();
     }
 
-    // 3. 🌟 升级版：管理员全局动态流 (包含新社团/新活动的创建)
     $recent_sql = "
         (SELECT 'groups' as icon, 'Club' as type, c.club_name as title, CONCAT(u.full_name, ' joined') as action, 'Recent' as date 
          FROM club_members cm JOIN clubs c ON cm.club_id = c.club_id JOIN users u ON cm.user_id = u.user_id)
@@ -93,7 +92,7 @@ if ($is_admin) {
     $ach_stmt->execute();
     $ach_count = $ach_stmt->get_result()->fetch_assoc()['count'];
 
-    // 🌟 升级版：学生动态流 (包含他们自己的记录，以及系统的新社团/新活动广播)
+
     $recent_sql = "
         (SELECT 'groups' as icon, 'Club' as type, c.club_name as title, 'Joined association' as action, 'Recent' as date 
          FROM club_members cm JOIN clubs c ON cm.club_id = c.club_id WHERE cm.user_id = ?)
@@ -111,7 +110,7 @@ if ($is_admin) {
          FROM events)
         ORDER BY date DESC LIMIT 5
     ";
-    // 参数依然只绑定三个问号，不受新增全局数据的影响
+    
     $r_stmt = $conn->prepare($recent_sql);
     $r_stmt->bind_param("iii", $user_id, $user_id, $user_id);
 }
@@ -128,17 +127,17 @@ $recent_activities = $r_stmt->get_result();
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script id="tailwind-config">
+    <script>
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
-                    "colors": {
+                    colors: {
                         "primary": "#003f87",
                         "surface": "#f6faff",
                         "on-surface": "#141d23"
                     },
-                    "fontFamily": {
+                    fontFamily: {
                         "headline": ["Manrope"],
                         "body": ["Inter"]
                     }
