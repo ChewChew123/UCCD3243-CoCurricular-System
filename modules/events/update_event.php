@@ -73,7 +73,7 @@ if(isset($_POST['new']) && $_POST['new'] == 1){
     WHERE event_id=?"; 
     
     $upd_stmt = $conn->prepare($update);
-    $upd_stmt->bind_param("ssssssissi", $date_record, $event_name, $event_type, $event_location, $event_date, $event_time, $register_expired_date, $club_id, $poster, $event_id);
+    $upd_stmt->bind_param("sssssssisi", $date_record, $event_name, $event_type, $event_location, $event_date, $event_time, $register_expired_date, $club_id, $poster, $event_id);
 
     if($upd_stmt->execute()) {
         $status = "Event Updated Successfully!";
