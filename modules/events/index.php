@@ -207,7 +207,7 @@ $deleted_events = $del_stmt->get_result();
         </div>
         <h2 class="text-xl font-bold text-slate-800 uppercase tracking-wider">Discover Activities</h2>
     </div>
-    
+
     <?php if ($is_admin && $deleted_events->num_rows > 0): ?>
     <section class="mt-20">
         <h2 class="text-xl font-bold mb-6 text-red-600 uppercase tracking-wider">
@@ -229,7 +229,7 @@ $deleted_events = $del_stmt->get_result();
                     <div class="flex gap-2">
                         
                         <!-- RESTORE -->
-                        <a href="recycle_action.php?event_id=<?php echo $d['event_id']; ?>"
+                        <a href="restore.php?event_id=<?php echo $d['event_id']; ?>"
                         class="bg-green-500 text-white px-4 py-2 rounded-full text-xs font-bold">
                             Restore
                         </a>
@@ -326,10 +326,11 @@ $deleted_events = $del_stmt->get_result();
                                 <a href="update_event.php?event_id=<?php echo $event['event_id']; ?>" title="Edit Record" class="p-2.5 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-600 hover:text-white transition-all">
                                     <span class="material-symbols-outlined text-[20px]">edit</span>
                                 </a>
-                                <a href="delete_event.php?event_id=<?php echo $event['event_id']; ?>" 
-                                   onclick="return confirm('Permanently remove this event record?')" 
-                                   title="Delete Record" class="p-2.5 bg-red-50 text-red-600 rounded-full hover:bg-red-600 hover:text-white transition-all">
-                                    <span class="material-symbols-outlined text-[20px]">delete</span>
+                                <a href="soft_delete.php?event_id=<?php echo $event['event_id']; ?>" 
+                                    onclick="return confirm('Move this event to recycle bin?')" 
+                                    title="Move to Recycle Bin"
+                                    class="p-2.5 bg-red-50 text-red-600 rounded-full hover:bg-red-600 hover:text-white transition-all">
+                                        <span class="material-symbols-outlined text-[20px]">delete</span>
                                 </a>
                             <?php endif; ?>
                         </div>
