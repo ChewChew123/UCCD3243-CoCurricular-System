@@ -2,32 +2,80 @@
 session_start();
 require_once '../../includes/db_connect.php';
 
-// Check authentication
+date_default_timezone_set('Asia/Kuala_Lumpur');
+
+// 1. AUTH CHECK
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../../login.php");
     exit();
 }
 
-if (isset($_GET['id'])) {
-    $event_id = intval($_GET['id']);
-    $user_id = $_SESSION['user_id'];
+$user_id = $_SESSION['user_id'];
+$event_id = isset($_GET['event_id']) 
+    ? intval($_GET['event_id']) 
+    : (isset($_GET['id']) ? intval($_GET['id']) : 0);
 
-    // Check if already joined to prevent duplicates
-    $check_sql = "SELECT * FROM event_participants WHERE event_id = ? AND user_id = ?";
-    $c_stmt = $conn->prepare($check_sql);
-    $c_stmt->bind_param("ii", $event_id, $user_id);
-    $c_stmt->execute();
-    
-    if ($c_stmt->get_result()->num_rows == 0) {
-        // Insert joining record
-        $ins_sql = "INSERT INTO event_participants (event_id, user_id) VALUES (?, ?)";
-        $i_stmt = $conn->prepare($ins_sql);
-        $i_stmt->bind_param("ii", $event_id, $user_id);
-        $i_stmt->execute();
-    }
+if ($event_id <= 0) {
+    header("Location: index.php?msg=invalid_event");
+    exit();
 }
 
-// Redirect back to the event dashboard
-header("Location: index.php");
+// 2. CHECK EVENT EXISTS + EXPIRY DATE
+$event_stmt = $conn->prepare("
+    SELECT register_expired_date 
+    FROM events 
+    WHERE event_id = ?
+");
+$event_stmt->bind_param("i", $event_id);
+$event_stmt->execute();
+$event = $event_stmt->get_result()->fetch_assoc();
+
+if (!$event) {
+    header("Location: index.php?msg=event_not_found");
+    exit();
+}
+
+$today = date('Y-m-d');
+
+// 3. EXPIRY VALIDATION
+if (!empty($event['register_expired_date']) && $today > $event['register_expired_date']) {
+    echo "<script>
+        alert('Registration closed. Deadline has passed.');
+        window.location.href = 'index.php?event_id=$event_id';
+    </script>";
+    exit();
+}
+
+// 4. CHECK IF ALREADY JOINED
+$check_stmt = $conn->prepare("
+    SELECT 1 
+    FROM event_participants 
+    WHERE user_id = ? AND event_id = ?
+    LIMIT 1
+");
+$check_stmt->bind_param("ii", $user_id, $event_id);
+$check_stmt->execute();
+$exists = $check_stmt->get_result()->fetch_row();
+
+// 5. PREVENT DUPLICATE JOIN
+if ($exists) {
+    header("Location: event_details.php?event_id=$event_id&msg=already_joined");
+    exit();
+}
+
+// 6. INSERT PARTICIPATION
+$insert_stmt = $conn->prepare("
+    INSERT INTO event_participants (user_id, event_id, participant_status)
+    VALUES (?, ?, 'Registered')
+");
+$insert_stmt->bind_param("ii", $user_id, $event_id);
+
+// 7. RESULT HANDLING
+if ($insert_stmt->execute()) {
+    header("Location: event_details.php?event_id=$event_id&msg=joined_success");
+} else {
+    header("Location: event_details.php?event_id=$event_id&msg=error");
+}
+
 exit();
 ?>
