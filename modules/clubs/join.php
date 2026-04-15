@@ -42,7 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_join'])) {
             $error = "You are already a member of this club!";
         } else {
             // Insert Operation
-            $insert_sql = "INSERT INTO club_members (user_id, club_id, member_role, member_status) VALUES (?, ?, ?, 'Active')";
+            // CHANGED: Status defaults to 'Pending' so Admin can approve it later.
+            $insert_sql = "INSERT INTO club_members (user_id, club_id, member_role, member_status) VALUES (?, ?, ?, 'Pending')";
             $insert_stmt = $conn->prepare($insert_sql);
             $insert_stmt->bind_param("iis", $user_id, $club_id, $role);
 

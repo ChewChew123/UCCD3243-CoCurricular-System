@@ -72,6 +72,16 @@ $ae_stmt = $conn->prepare($sel_query);
 $ae_stmt->bind_param("i", $user_id);
 $ae_stmt->execute();
 $all_events = $ae_stmt->get_result();
+
+$deleted_events_sql = "SELECT e.*, c.club_name 
+                       FROM events e
+                       LEFT JOIN clubs c ON e.club_id = c.club_id
+                       WHERE e.deleted = 1
+                       ORDER BY e.event_date DESC";
+
+$del_stmt = $conn->prepare($deleted_events_sql);
+$del_stmt->execute();
+$deleted_events = $del_stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -198,6 +208,46 @@ $all_events = $ae_stmt->get_result();
         <h2 class="text-xl font-bold text-slate-800 uppercase tracking-wider">Discover Activities</h2>
     </div>
 
+    <?php if ($is_admin && $deleted_events->num_rows > 0): ?>
+    <section class="mt-20">
+        <h2 class="text-xl font-bold mb-6 text-red-600 uppercase tracking-wider">
+            Recently Deleted Events (Recycle Bin)
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <?php while($d = $deleted_events->fetch_assoc()): ?>
+                <div class="bg-red-50 border border-red-100 p-6 rounded-2xl">
+                    
+                    <h3 class="font-bold text-slate-800 mb-2">
+                        <?php echo htmlspecialchars($d['event_name']); ?>
+                    </h3>
+
+                    <p class="text-xs text-slate-500 mb-4">
+                        <?php echo date('d M Y', strtotime($d['event_date'])); ?>
+                    </p>
+
+                    <div class="flex gap-2">
+                        
+                        <!-- RESTORE -->
+                        <a href="restore.php?event_id=<?php echo $d['event_id']; ?>"
+                        class="bg-green-500 text-white px-4 py-2 rounded-full text-xs font-bold">
+                            Restore
+                        </a>
+
+                        <!-- PERMANENT DELETE -->
+                        <a href="delete_event.php?event_id=<?php echo $d['event_id']; ?>"
+                        onclick="return confirm('Permanently delete this event? This cannot be undone.')"
+                        class="bg-red-600 text-white px-4 py-2 rounded-full text-xs font-bold">
+                            Delete Forever
+                        </a>
+                    </div>
+
+                </div>
+            <?php endwhile; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
     <section class="mb-12 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
         <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div class="md:col-span-2">
@@ -276,10 +326,11 @@ $all_events = $ae_stmt->get_result();
                                 <a href="update_event.php?event_id=<?php echo $event['event_id']; ?>" title="Edit Record" class="p-2.5 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-600 hover:text-white transition-all">
                                     <span class="material-symbols-outlined text-[20px]">edit</span>
                                 </a>
-                                <a href="delete_event.php?event_id=<?php echo $event['event_id']; ?>" 
-                                   onclick="return confirm('Permanently remove this event record?')" 
-                                   title="Delete Record" class="p-2.5 bg-red-50 text-red-600 rounded-full hover:bg-red-600 hover:text-white transition-all">
-                                    <span class="material-symbols-outlined text-[20px]">delete</span>
+                                <a href="soft_delete.php?event_id=<?php echo $event['event_id']; ?>" 
+                                    onclick="return confirm('Move this event to recycle bin?')" 
+                                    title="Move to Recycle Bin"
+                                    class="p-2.5 bg-red-50 text-red-600 rounded-full hover:bg-red-600 hover:text-white transition-all">
+                                        <span class="material-symbols-outlined text-[20px]">delete</span>
                                 </a>
                             <?php endif; ?>
                         </div>

@@ -54,11 +54,11 @@ if ($is_admin) {
 
 // Search Filter
 if (!empty($search)) {
-    $sql .= " AND (a.achievement_title LIKE ? OR a.issuer LIKE ?)";
+   $sql .= " AND (a.achievement_title LIKE ? OR a.issuer LIKE ? OR u.full_name LIKE ?)";
     $search_param = "%$search%";
     if (!isset($params)) { $params = []; $types = ""; }
-    array_push($params, $search_param, $search_param);
-    $types .= "ss";
+    array_push($params, $search_param, $search_param, $search_param);
+    $types .= "sss";
 }
 
 // Category Filter
