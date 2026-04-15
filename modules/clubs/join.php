@@ -31,26 +31,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_join'])) {
     if (empty($club_id) || empty($role)) {
         $error = "Please select both a club and a role.";
     } else {
-        // Prevention Logic: Check for existing membership
-        $check_sql = "SELECT member_id FROM club_members WHERE user_id = ? AND club_id = ?";
-        $check_stmt = $conn->prepare($check_sql);
-        $check_stmt->bind_param("ii", $user_id, $club_id);
-        $check_stmt->execute();
-        $check_result = $check_stmt->get_result();
+        // [Logic Upgrade 1] Count Active Clubs (Limit 5)
+        $limit_sql = "SELECT COUNT(*) as active_count FROM club_members WHERE user_id = ? AND member_status = 'Active'";
+        $limit_stmt = $conn->prepare($limit_sql);
+        $limit_stmt->bind_param("i", $user_id);
+        $limit_stmt->execute();
+        $active_count = $limit_stmt->get_result()->fetch_assoc()['active_count'];
 
-        if ($check_result->num_rows > 0) {
-            $error = "You are already a member of this club!";
+        if ($active_count >= 5) {
+            $error = "Maximum enrollment reached. You cannot lead more than 5 active clubs simultaneously to ensure academic balance.";
         } else {
-            // Insert Operation
-            $insert_sql = "INSERT INTO club_members (user_id, club_id, member_role, member_status) VALUES (?, ?, ?, 'Active')";
-            $insert_stmt = $conn->prepare($insert_sql);
-            $insert_stmt->bind_param("iis", $user_id, $club_id, $role);
+            // [Logic Upgrade 2] Role-based Status Logic
+            // Roles starting with 'Lead' or containing 'Liaison' require administrative review
+            $status = (strpos($role, 'Lead') !== false || strpos($role, 'Liaison') !== false) ? 'Pending' : 'Active';
 
-            if ($insert_stmt->execute()) {
-                header("Location: index.php?join=success");
-                exit();
+            // Prevention Logic: Check for existing membership (Ignore 'Past' historical records)
+            $check_sql = "SELECT member_id FROM club_members WHERE user_id = ? AND club_id = ? AND member_status IN ('Active', 'Pending')";
+            $check_stmt = $conn->prepare($check_sql);
+            $check_stmt->bind_param("ii", $user_id, $club_id);
+            $check_stmt->execute();
+            $check_result = $check_stmt->get_result();
+
+            if ($check_result->num_rows > 0) {
+                $error = "You already have an active or pending application for this club!";
             } else {
-                $error = "Failed to join club. Please try again later.";
+                // Insert Operation with dynamic status
+                $insert_sql = "INSERT INTO club_members (user_id, club_id, member_role, member_status) VALUES (?, ?, ?, ?)";
+                $insert_stmt = $conn->prepare($insert_sql);
+                $insert_stmt->bind_param("iiss", $user_id, $club_id, $role, $status);
+
+                if ($insert_stmt->execute()) {
+                    $msg = ($status === 'Pending') ? "join=pending" : "join=success";
+                    header("Location: index.php?$msg");
+                    exit();
+                } else {
+                    $error = "Failed to process enrollment. Please contact the Faculty Liaison.";
+                }
             }
         }
     }

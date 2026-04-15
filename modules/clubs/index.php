@@ -35,11 +35,12 @@ if ($is_admin) {
             JOIN users u ON cm.user_id = u.user_id";
     $stmt = $conn->prepare($sql);
 } else {
-    // Student: Fetch only their personal memberships
+    // Student: Fetch only their personal memberships, ordering by Status for priority view
     $sql = "SELECT cm.member_id, c.club_id, c.club_name, c.club_category, cm.member_role, cm.member_status 
             FROM club_members cm 
             JOIN clubs c ON cm.club_id = c.club_id 
-            WHERE cm.user_id = ?";
+            WHERE cm.user_id = ?
+            ORDER BY FIELD(cm.member_status, 'Active', 'Pending', 'Past')";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $user_id);
 }
@@ -96,7 +97,7 @@ include '../../includes/sidebar.php';
 <div class="flex-1 max-w-xl">
 <div class="relative">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary transition-all text-sm" placeholder="Search curated clubs..." type="text"/>
+<input id="clubSearch" class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-primary transition-all text-sm" placeholder="Search curated clubs..." type="text"/>
 </div>
 </div>
 <div class="flex items-center gap-6 ml-8">
@@ -124,11 +125,26 @@ include '../../includes/sidebar.php';
 </header>
 <main class="ml-72 mt-20 p-12 bg-surface min-h-screen">
     
+    <!-- Feedback Notifications -->
+    <?php if (isset($_GET['join']) && $_GET['join'] == 'success'): ?>
+        <div class="mb-8 p-4 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 flex items-center gap-3 rounded-lg shadow-sm animate-in fade-in slide-in-from-top-2">
+            <span class="material-symbols-outlined">check_circle</span>
+            <span class="font-bold">Welcome to the club! Your membership is now active.</span>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($_GET['join']) && $_GET['join'] == 'pending'): ?>
+        <div class="mb-8 p-4 bg-amber-100 border-l-4 border-amber-500 text-amber-700 flex items-center gap-3 rounded-lg shadow-sm animate-in fade-in slide-in-from-top-2">
+            <span class="material-symbols-outlined">pending</span>
+            <span class="font-bold font-headline">Application Received! Your Lead Curator portfolio is currently under review by the faculty.</span>
+        </div>
+    <?php endif; ?>
+
     <?php if (isset($_GET['delete']) && $_GET['delete'] == 'success'): ?>
-            <div class="mb-8 p-4 bg-emerald-100 border-l-4 border-emerald-500 text-emerald-700 flex items-center gap-3 rounded-lg shadow-sm">
-                <span class="material-symbols-outlined">check_circle</span>
-                <span class="font-medium">You have successfully left the club. Your membership has been removed.</span>
-            </div>
+        <div class="mb-8 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700 flex items-center gap-3 rounded-lg shadow-sm">
+            <span class="material-symbols-outlined">info</span>
+            <span class="font-bold">Membership archived. You can still view this in your activity history.</span>
+        </div>
     <?php endif; ?>
 
 <div class="flex justify-between items-end mb-12">
@@ -196,7 +212,7 @@ include '../../includes/sidebar.php';
 <th class="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] font-label text-right">Action</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-slate-100">
+<tbody id="membershipTableBody" class="divide-y divide-slate-100">
 <?php if (count($all_memberships) > 0): ?>
     <?php foreach ($all_memberships as $club): ?>
     <tr class="hover:bg-surface-container-low transition-colors group">
@@ -216,22 +232,31 @@ include '../../includes/sidebar.php';
 
 <td class="px-8 py-6">
     <?php 
-        // 🌟 Fix: If status is empty in DB, default to 'Pending'
-        $current_status = !empty($club['member_status']) ? $club['member_status'] : 'Pending';
+        $current_status = $club['member_status'] ?? 'Active';
         
-        // Define specific colors for each status
-        if ($current_status == 'Active') {
-            $text_color = 'text-emerald-600';
-            $dot_color = 'bg-emerald-600';
-        } elseif ($current_status == 'Pending') {
-            $text_color = 'text-amber-600'; // Amber for Pending
-            $dot_color = 'bg-amber-600';
-        } else {
-            $text_color = 'text-slate-400'; // Gray for Inactive or others
-            $dot_color = 'bg-slate-400';
+        switch($current_status) {
+            case 'Active':
+                $text_color = 'text-emerald-600';
+                $dot_color = 'bg-emerald-600';
+                $bg_color = 'bg-emerald-50';
+                break;
+            case 'Pending':
+                $text_color = 'text-amber-600';
+                $dot_color = 'bg-amber-600';
+                $bg_color = 'bg-amber-50';
+                break;
+            case 'Past':
+                $text_color = 'text-slate-400';
+                $dot_color = 'bg-slate-400';
+                $bg_color = 'bg-slate-50';
+                break;
+            default:
+                $text_color = 'text-slate-400';
+                $dot_color = 'bg-slate-400';
+                $bg_color = 'bg-slate-50';
         }
     ?>
-    <div class="flex items-center gap-2 <?php echo $text_color; ?>">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full <?php echo $bg_color; ?> <?php echo $text_color; ?>">
         <span class="w-1.5 h-1.5 rounded-full <?php echo $dot_color; ?>"></span>
         <span class="text-[10px] font-black uppercase tracking-wider">
             <?php echo htmlspecialchars($current_status); ?>
@@ -249,12 +274,16 @@ include '../../includes/sidebar.php';
                 <span class="material-symbols-outlined text-lg">delete</span>
             </a>
         <?php else: ?>
-            <a href="delete_membership.php?id=<?php echo $club['member_id']; ?>" 
-               onclick="return confirm('Are you sure you want to leave this club?')" 
-               class="px-4 py-2 bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2">
-                <span class="material-symbols-outlined text-sm">logout</span>
-                Leave Club
-            </a>
+            <?php if ($club['member_status'] !== 'Past'): ?>
+                <a href="delete_membership.php?id=<?php echo $club['member_id']; ?>" 
+                   onclick="return confirm('Are you sure you want to leave this club? Your role will be moved to history.')" 
+                   class="px-4 py-2 bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 rounded-full text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">logout</span>
+                    Leave Club
+                </a>
+            <?php else: ?>
+                <span class="text-[10px] font-bold text-slate-300 uppercase tracking-widest px-4 py-2 italic">Historical Record</span>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
 </td>
@@ -277,6 +306,31 @@ function toggleSettingsDropdown(e) {
 document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('settings-dropdown');
     if (dropdown && !e.target.closest('.settings-btn')) dropdown.classList.add('hidden');
+});
+
+// Real-time Search Logic
+document.getElementById('clubSearch').addEventListener('keyup', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#membershipTableBody tr:not(:last-child)'); // Avoid hiding the "No records found" row if present, or we can handle it differently.
+    
+    // Better targeting: only rows with actual data (which have group class)
+    const dataRows = document.querySelectorAll('#membershipTableBody tr.group');
+
+    dataRows.forEach(row => {
+        const clubName = row.querySelector('.font-headline').textContent.toLowerCase();
+        const role = row.querySelector('.font-medium').textContent.toLowerCase();
+        // Check if admin to also search by student name
+        let studentName = '';
+        <?php if ($is_admin): ?>
+            studentName = row.cells[1].textContent.toLowerCase();
+        <?php endif; ?>
+        
+        if (clubName.includes(searchTerm) || studentName.includes(searchTerm) || role.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
 });
 </script>
 </body></html>

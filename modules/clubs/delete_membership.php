@@ -14,8 +14,8 @@ $user_id = $_SESSION['user_id'];
 if (isset($_GET['id']) && !empty($_GET['id'])) {
     $member_id = intval($_GET['id']);
 
-    // Prepared Statement for Deletion with Ownership Verification
-    $sql = "DELETE FROM club_members WHERE member_id = ? AND user_id = ?";
+    // Logic Upgrade: Instead of physical deletion, we transition to 'Past' status for history log
+    $sql = "UPDATE club_members SET member_status = 'Past' WHERE member_id = ? AND user_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ii", $member_id, $user_id);
 
